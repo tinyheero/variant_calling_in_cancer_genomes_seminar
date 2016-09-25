@@ -1,2 +1,6 @@
-# variant_calling_in_cancer_genomes_seminar
-Repository for the Variant Caller in Cancer Genomes Seminar
+# Variant Calling in Cancer Genomes Seminar
+
+Date: Sept 27, 2016
+Time: 12-1pm
+Location: Dorothy Lam Boardroom
+
