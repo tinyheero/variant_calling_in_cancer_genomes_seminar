@@ -4,9 +4,25 @@
 * Time: 12-1pm
 * Location: Dorothy Lam Boardroom
 
+## Contact
+
+Feel free to contact me for help regarding the content in this workshop:
+
+* email: fongchunchan@gmail.com
+* twitter: https://twitter.com/fongchunchan
+* blog: http://tinyheero.github.io
+
 ## Setup
 
 These instructions have been tested on a linux machine. 
+
+### Clone Repository
+
+git clone this repository:
+
+```
+git clone git@github.com:tinyheero/variant_calling_in_cancer_genomes_seminar.git
+```
 
 ### Installing Strelka
 
@@ -102,6 +118,8 @@ java -Xmx4G -jar $(HOME)/usr/snpeff/4.3/snpEff.jar \
 ```
 
 ## Converting VCF to Table
+
+One standard step that is often done is converting the VCF file into a tabular format that can be easily loaded into other software (e.g. R, python) for additional analysis or easier distribution (e.g. excel) for collaborators. The following command demonstrates how one can 
 
 ```
 java -jar /home/fong/usr/snpeff/4.3/SnpSift.jar \
