@@ -25,3 +25,21 @@ make
 ```
 
 This will install strelka into your home directory folder at `$HOME/usr/strelka/1.0.15`. 
+
+### Downloading Human Reference
+
+The human reference genome cannot be downloaded from this github repo as the file is too large. But the reference genome can be obtained from the [Genome Science Center FTP server](http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome/). We will put these the genome fasta and index file into the refs folder:
+
+```
+mkdir refs
+cd refs
+wget http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome/GRCh37-lite.fa
+wget http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome/GRCh37-lite.fa.fai
+```
+
+## Calling Variants
+
+### Using Strelka
+
+To call variants in strelka, we use the following command:
+
