@@ -65,8 +65,7 @@ wget http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome/
 To call variants in Strelka, we use the following command:
 
 ```
-STRELKA_PATH=${HOME}/usr/strelka/1.0.15/bin
-${STRELKA_PATH}/configureStrelkaWorkflow.pl \
+$(HOME)/usr/strelka/1.0.15/bin/configureStrelkaWorkflow.pl \
   --tumor bams/HCC1395_exome_tumour.17.7MB-8MB.bam \
   --normal bams/HCC1395_exome_normal.17.7MB-8MB.bam \
   --ref refs/GRCh37-lite.fa \
@@ -93,6 +92,33 @@ We will annotate variants using [SnpEff](http://snpeff.sourceforge.net/). Other 
 * [VEP](http://uswest.ensembl.org/info/docs/tools/vep/index.html)
 
 Once we have the 
+
+```
+java -Xmx4G -jar $(HOME)/usr/snpeff/4.3/snpEff.jar \
+  -canon \
+  GRCh37.75 \
+  -s strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.snpeff.summary.html \
+  strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.vcf > strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.snpeff.vcf
+```
+
+## Converting VCF to Table
+
+```
+java -jar /home/fong/usr/snpeff/4.3/SnpSift.jar \
+  extractFields \
+  -e "."  \
+  -s "," \
+  strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.snpeff.vcf \
+  CHROM POS ID REF ALT QUAL FILTER QSS TQSS NT QSS_NT TQSS_NT SGT SOMATIC \
+  GEN[0].DP GEN[1].DP GEN[0].FDP GEN[1].FDP GEN[0].SDP GEN[1].SDP \
+  GEN[0].SUBDP GEN[1].SUBDP GEN[0].AU GEN[1].AU GEN[0].CU GEN[1].CU \
+  GEN[0].GU GEN[1].GU GEN[0].TU GEN[1].TU ANN[*].ALLELE ANN[*].EFFECT \
+  ANN[*].IMPACT ANN[*].GENE ANN[*].GENEID ANN[*].FEATURE ANN[*].FEATUREID \
+  ANN[*].BIOTYPE ANN[*].RANK ANN[*].HGVS_C ANN[*].HGVS_P ANN[*].CDNA_POS \
+  ANN[*].CDNA_LEN ANN[*].CDS_POS ANN[*].CDS_LEN ANN[*].AA_POS \
+  ANN[*].AA_LEN ANN[*].DISTANCE ANN[*].ERRORS \
+  > strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.snpeff.tsv
+```
 
 ## Pipeline
 
