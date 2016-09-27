@@ -41,5 +41,26 @@ wget http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome/
 
 ### Using Strelka
 
-To call variants in strelka, we use the following command:
+To call variants in Strelka, we use the following command:
+
+```
+STRELKA_PATH = ${HOME}/usr/strelka/1.0.15/bin
+${STRELKA_PATH}/configureStrelkaWorkflow.pl \
+  --tumor bams/HCC1395_exome_tumour.17.7MB-8MB.bam \
+  --normal bams/HCC1395_exome_normal.17.7MB-8MB.bam \
+  --ref refs/GRCh37-lite.fa \
+  --config strelka/config/strelka_config_bwa_default.ini \
+  --output-dir strelka/HCC1395_exome_tumour_normal
+```
+
+This will setup the Strelka run, now do the following:
+
+```
+cd strelka/HCC1395_exome_tumour_normal
+make
+```
+
+This will run Strelka and take some time depending on how fast your computer is. 
+
+> You can use the -j parameter to specify how many computational cores to use to speed up the process. For example `make -j 4` will use 4 computational cores. 
 
