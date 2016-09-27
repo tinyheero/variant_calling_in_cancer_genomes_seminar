@@ -119,10 +119,12 @@ java -Xmx4G -jar $(HOME)/usr/snpeff/4.3/snpEff.jar \
 
 ## Converting VCF to Table
 
-One standard step that is often done is converting the VCF file into a tabular format that can be easily loaded into other software (e.g. R, python) for additional analysis or easier distribution (e.g. excel) for collaborators. The following command demonstrates how one can 
+One standard step that is often done is converting the VCF file into a tabular format that can be easily loaded into other software (e.g. R, python) for additional analysis or easier distribution (e.g. excel) for collaborators. 
+
+The following command demonstrates how one can convert the Strelka VCF output file that has been annotated with SnpEff into a tabular format.
 
 ```
-java -jar /home/fong/usr/snpeff/4.3/SnpSift.jar \
+java -jar $(HOME)/usr/snpeff/4.3/SnpSift.jar \
   extractFields \
   -e "."  \
   -s "," \
@@ -137,6 +139,20 @@ java -jar /home/fong/usr/snpeff/4.3/SnpSift.jar \
   ANN[*].AA_LEN ANN[*].DISTANCE ANN[*].ERRORS \
   > strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.snpeff.tsv
 ```
+
+## Post-Processing in R
+
+The final step is often the post-processing of the results in a data analysis language. In this workshop, we will use the data analysis language R for our post-processing. 
+
+A rmarkdown file (analyze_snv_results.Rmd) has been provided that provides the R code to demonstrate some of the typical plots and analyses that can be generated from variant calling results. The rmarkdown file can be rendered into a html page that can be opened in a standard web browser (e.g. Google Chrome). You will need Rstudio (v0.99.903; tested on this version) in order to render the rmarkdown file. Also the following R packages need to be installed:
+
+* data.table (v1.9.6)
+* ggplot2 (v2.1.0)
+* plyr (v1.8.3)
+* dplyr (v0.5.0)
+* stringr (v0.6.2)
+
+Now when you open the analyze_snv_results.Rmd file in Rstudio, you should be able to press the "Knit HTML") button and it should render the rmarkdown file into a html page.
 
 ## Pipeline
 
