@@ -29,6 +29,68 @@ git clone git@github.com:tinyheero/variant_calling_in_cancer_genomes_seminar.git
 The repository provides the following files:
 
 * `bams`: These are the BWA aligned exome bam files that will be used in this tutorial. The bam files have been restricted to a 1 MB region on chromosome 17.
+* `Makefile`: A makefile pipeline that executes the commands in this workshop
+* `analyze_snv_results.Rmd`: A [rmarkdown](http://rmarkdown.rstudio.com/) file that demonstrates a standard post-processing analysis
+
+### Installing MutationSeq
+
+MutationSeq can be downloaded from http://compbio.bccrc.ca/software/mutationseq. For this workshop, version 4.3.8 was used. Once you have downloaded it, extract it:
+
+```bash
+$ tar -xzvf museq_4.3.8.tar.gz
+```
+
+This will extract the content into a folder `mutationseq`. We will move the files into `$HOME/usr/museq/4.3.8` for organization purposes:
+
+```
+$ mkdir -p $HOME/usr/museq/4.3.8
+$ mv mutationseq/* $HOME/usr/museq/4.3.8
+```
+
+Now we need to install MutationSeq. MutationSeq requires python (v2.7) and several key package dependencies:
+
+* numpy
+* scipy
+* matplotlib
+* scikit-learn
+* intervaltree
+
+The best way to install all of this is to use either [Miniconda](http://conda.pydata.org/miniconda.html) or anaconda. We will use miniconda here. First download miniconda (for python 2.7) and then run:
+
+```
+$ sh Miniconda2-latest-Linux-x86_64.sh
+```
+
+Then follow the instructions. When you have finished following the instructions, you should have python installed:
+
+```
+$ which python
+~/miniconda2/bin/python
+```
+
+Now we can install the dependencies needed:
+
+```
+$ conda install numpy scipy matplotlib scikit-learn intervaltree
+```
+
+One last thing that is needed before we can install MutationSeq is the Boost C libraries. We only need to download them from http://www.boost.org/. Once you have downloaded (tested on 1.51) just extract them to a location. For example, you could put it into `$HOME/usr/boost/1.51`
+
+Once this has been installed, we can now proceed to installing MutationSeq.
+
+```
+$ make PYTHON=python BOOSTPATH=$HOME/usr/boost/1.51
+```
+
+Now when you run:
+
+```
+$ python $HOME/usr/museq/4.3.8/museq/classify.py --version
+4.3.8
+```
+
+This indicates that you have successfully installed MutationSeq.
+
 
 ### Installing Strelka
 
@@ -168,9 +230,14 @@ java -jar $(HOME)/usr/snpeff/4.3/SnpSift.jar \
 
 ## Post-Processing in R
 
-The final step is often the post-processing of the results in a data analysis language. In this workshop, we will use the data analysis language R for our post-processing. 
+The final step is often the post-processing of the results in a data analysis language. In this workshop, we will use the data analysis language R for our post-processing. The files we will be post-processing are in this repo:
 
-A rmarkdown file (analyze_snv_results.Rmd) has been provided that provides the R code to demonstrate some of the typical plots and analyses that can be generated from variant calling results. The rmarkdown file can be rendered into a html page that can be opened in a standard web browser (e.g. Google Chrome). You will need Rstudio (v0.99.903; tested on this version) in order to render the rmarkdown file. Also the following R packages need to be installed:
+* `strelka/HCC1395.strelka.full.txt`
+* `museq/HCC1395.museq.full.txt`
+
+These are the Strelka and MutationSeq runs on the full exome data as opposed to the subset of the exome which are what the bam files in the repository are. The full exome data though is processed through the same pipeline though.
+
+A rmarkdown file (`analyze_snv_results.Rmd`) has been provided that provides the R code to demonstrate some of the typical plots and analyses that can be generated from variant calling results. The rmarkdown file can be rendered into a html page that can be opened in a standard web browser (e.g. Google Chrome). You will need Rstudio (v0.99.903; tested on this version) in order to render the rmarkdown file. Also the following R packages need to be installed:
 
 * data.table (v1.9.6)
 * ggplot2 (v2.1.0)
@@ -178,7 +245,7 @@ A rmarkdown file (analyze_snv_results.Rmd) has been provided that provides the R
 * dplyr (v0.5.0)
 * stringr (v0.6.2)
 
-Now when you open the analyze_snv_results.Rmd file in Rstudio, you should be able to press the "Knit HTML") button and it should render the rmarkdown file into a html page.
+Now when you open the `analyze_snv_results.Rmd` file in Rstudio, you should be able to press the "Knit HTML") button and it should render the rmarkdown file into a html page.
 
 ## Pipeline
 
