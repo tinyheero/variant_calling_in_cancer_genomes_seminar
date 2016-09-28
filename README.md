@@ -14,6 +14,14 @@ Feel free to contact me for help regarding the content in this workshop:
 * twitter: https://twitter.com/fongchunchan
 * blog: http://tinyheero.github.io
 
+## Table of Contents
+
+* [Setup](#setup)
+* [Calling Variants](#calling-variants)
+* [Annotating Variants](#annotating-variants)
+* [Converting VCF to Table](#converting-vcf-to-table)
+* [Pipeline](#pipeline)
+
 ## Setup
 
 These instructions have been tested on a linux machine. 
