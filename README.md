@@ -17,6 +17,13 @@ Feel free to contact me for help regarding the content in this workshop:
 ## Table of Contents
 
 * [Setup](#setup)
+    + [Clone Repository](#clone-repository)
+    + [Using Conda](#using-conda)
+    + [Downloading Human Reference](#downloading-human-reference)
+    + [Getting the Full Exome Data](#getting-the-full-exome-data)
+        - [Bam to Fastq Conversion](#bam-to-fastq-conversion)
+        - [Sequence Alignment using BWA](#sequence-alignment-using-bwa)
+    + [Installing MutationSeq](#installing-mutationseq)
 * [Calling Variants](#calling-variants)
 * [Annotating Variants](#annotating-variants)
 * [Converting VCF to Table](#converting-vcf-to-table)
