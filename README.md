@@ -14,6 +14,25 @@ Feel free to contact me for help regarding the content in this workshop:
 * twitter: https://twitter.com/fongchunchan
 * blog: http://tinyheero.github.io
 
+## Table of Contents
+
+* [Setup](#setup)
+    + [Clone Repository](#clone-repository)
+    + [Using Conda](#using-conda)
+    + [Downloading Human Reference](#downloading-human-reference)
+    + [Getting the Full Exome Data](#getting-the-full-exome-data)
+        - [Bam to Fastq Conversion](#bam-to-fastq-conversion)
+        - [Sequence Alignment using BWA](#sequence-alignment-using-bwa)
+    + [Installing MutationSeq](#installing-mutationseq)
+    + [Installing Strelka](#installing-strelka)
+    + [Installing SnpEff](#installing-snpeff)
+* [Calling Variants](#calling-variants)
+    + [Using Strelka](#using-strelka)
+* [Annotating Variants](#annotating-variants)
+* [Converting VCF to Table](#converting-vcf-to-table)
+* [Post-Processing in R](#post-processing-in-r)
+* [Pipeline](#pipeline)
+
 ## Setup
 
 These instructions have been tested on a linux machine. 
@@ -22,25 +41,193 @@ These instructions have been tested on a linux machine.
 
 git clone this repository:
 
-```
+```{bash}
 git clone git@github.com:tinyheero/variant_calling_in_cancer_genomes_seminar.git
 ```
 
 The repository provides the following files:
 
 * `bams`: These are the BWA aligned exome bam files that will be used in this tutorial. The bam files have been restricted to a 1 MB region on chromosome 17.
+* `Makefile`: A makefile pipeline that executes the commands in this workshop
+* `analyze_snv_results.Rmd`: A [rmarkdown](http://rmarkdown.rstudio.com/) file that demonstrates a standard post-processing analysis
+
+### Using Conda
+
+While not necessary, using conda for both installation and package management will make life easier and is recommended for this workshop. Conda is a package management system that is becoming popular in the field of bioinformatics for reproducible research. An increasing number of bioinformatics software are now being distributed through this system. 
+
+For this workshop, installation of different tools will be done by conda (when possible). When the tools are not in conda, instructions on how to manually install the software will be provided. To install conda, we can get it through [miniconda](http://conda.pydata.org/miniconda.html). First download miniconda (for python 2.7) and then run:
+
+```{bash}
+sh Miniconda2-latest-Linux-x86_64.sh
+```
+
+Then follow the instructions. When you have finished following the instructions, you should have python installed:
+
+```{bash}
+which conda
+~/miniconda2/bin/conda
+```
+
+If you choose not to use conda to install the software needed for this workshop, then you will have to manually install it by yourself. 
+
+### Downloading Human Reference
+
+The first thing we will do is get a human reference to work with. The human reference genome cannot be downloaded from this github repo as the file is too large. But the reference genome can be obtained from the [Genome Science Center FTP server](http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome/). We will put these the genome fasta and index file into the refs folder:
+
+```{bash}
+mkdir refs
+cd refs
+wget http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome/GRCh37-lite.fa
+wget http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome/GRCh37-lite.fa.fai
+```
+
+### Getting the Full Exome Data
+
+> You can skip this section if you are content with working with the bam files that are in the repo. 
+
+The original full exome data can be found https://github.com/genome/gms/wiki/HCC1395-WGS-Exome-RNA-Seq-Data. The repo contains in the `bam` folder two smaller tumor and normal bam files where only a 1 MB region on chromosome 17 is represented. This was done to file size issues. If you are interested in working with the whole exome data set, then you can follow these instructions:
+
+```{bash}
+cd bam
+wget https://xfer.genome.wustl.edu/gxfer1/project/gms/testdata/bams/hcc1395/gerald_C1TD1ACXX_7_CGATGT.bam # normal exome
+wget https://xfer.genome.wustl.edu/gxfer1/project/gms/testdata/bams/hcc1395/gerald_C1TD1ACXX_7_ATCACG.bam # tumor exome
+```
+
+Once these bam files have been downloaded, you will need to extract them as fastq files. 
+
+#### Bam to Fastq Conversion
+
+Picard SamToFastq provides this functionality. To install this:
+
+```{bash}
+conda install -c bioconda picard
+picard SamToFastq --version
+```
+
+We can now extract to fastq by using the command for the normal exome:
+
+```{bash}
+mkdir fastq;
+picard SamToFastq \
+  INPUT=bam/gerald_C1TD1ACXX_7_CGATGT.bam \
+  FASTQ=fastq/gerald_C1TD1ACXX_7_CGATGT_R1.fastq \
+  SECOND_END_FASTQ=fastq/gerald_C1TD1ACXX_7_CGATGT_R2.fastq
+```
+
+Now for the tumor exome:
+
+```{bash}
+picard SamToFastq \
+  INPUT=bam/gerald_C1TD1ACXX_7_ATCACG.bam \
+  FASTQ=fastq/gerald_C1TD1ACXX_7_ATCACG_R1.fastq \
+  SECOND_END_FASTQ=fastq/gerald_C1TD1ACXX_7_ATCACG_R2.fastq
+```
+
+These extraction steps will take a fair bit of time. 
+
+#### Sequence Alignment using BWA
+
+Once you have extracted these files, we can align them using bwa. By default bwa outputs sam files and for compression reasons we want to be working in the binary form of sam which is bam. We will also need samtools for this conversion. We can install bwa (v0.7.12) and samtools using conda:
+
+```{bash}
+conda install -c bioconda bwa=0.7.1.2 samtools
+```
+
+We will need to first bwa index the genome:
+
+```{bash}
+bwa index refs/GRCh37-lite.fa
+```
+
+Once you have done this, we can align each exome. For the normal exome:
+
+```
+mkdir sai
+
+# bwa aln
+bwa aln refs/GRCh37-lite.fa fastq/gerald_C1TD1ACXX_7_CGATGT_R1.fastq > sai/gerald_C1TD1ACXX_7_CGATGT_R1.sai
+bwa aln refs/GRCh37-lite.fa fastq/gerald_C1TD1ACXX_7_CGATGT_R2.fastq > sai/gerald_C1TD1ACXX_7_CGATGT_R2.sai
+
+# bwa sampe
+bwa sampe refs/GRCh37-lite.fa \
+  sai/gerald_C1TD1ACXX_7_CGATGT_R1.sai \
+  sai/gerald_C1TD1ACXX_7_CGATGT_R2.sai \
+  fastq/gerald_C1TD1ACXX_7_CGATGT_R1.fastq \
+  fastq/gerald_C1TD1ACXX_7_CGATGT_R2.fastq | 
+  samtools view -bh > HCC1395_exome_normal.bam
+```
+
+### Installing MutationSeq
+
+MutationSeq can be downloaded from http://compbio.bccrc.ca/software/mutationseq. For this workshop, version 4.3.8 was used. Once you have downloaded it, extract it:
+
+```{bash}
+tar -xzvf museq_4.3.8.tar.gz
+```
+
+This will extract the content into a folder `mutationseq`. We will move the files into `$HOME/usr/museq/4.3.8` for organization purposes:
+
+```
+mkdir -p $HOME/usr/museq/4.3.8
+mv mutationseq/* $HOME/usr/museq/4.3.8
+```
+
+Now we need to install MutationSeq. MutationSeq requires python (v2.7) and several key package dependencies:
+
+* numpy
+* scipy
+* matplotlib
+* scikit-learn
+* intervaltree
+
+The best way to install all of this is to use either [Miniconda](http://conda.pydata.org/miniconda.html) or anaconda. We will use miniconda here. First download miniconda (for python 2.7) and then run:
+
+```{bash}
+sh Miniconda2-latest-Linux-x86_64.sh
+```
+
+Then follow the instructions. When you have finished following the instructions, you should have python installed:
+
+```{bash}
+which python
+~/miniconda2/bin/python
+```
+
+Now we can install the dependencies needed:
+
+```{bash}
+conda install numpy scipy matplotlib scikit-learn intervaltree
+```
+
+One last thing that is needed before we can install MutationSeq is the Boost C libraries. We only need to download them from http://www.boost.org/. Once you have downloaded (tested on 1.51) just extract them to a location. For example, you could put it into `$HOME/usr/boost/1.51`
+
+Once this has been installed, we can now proceed to installing MutationSeq.
+
+```{bash}
+make PYTHON=python BOOSTPATH=$HOME/usr/boost/1.51
+```
+
+Now when you run:
+
+```{bash}
+python $HOME/usr/museq/4.3.8/museq/classify.py --version
+4.3.8
+```
+
+This indicates that you have successfully installed MutationSeq.
+
 
 ### Installing Strelka
 
 Strelka can be downloaded from https://sites.google.com/site/strelkasomaticvariantcaller/home/download as a .tar.gz file. For this workshop, version 1.0.15 was used. Once you have it downloaded, extract it:
 
-```bash
+```{bash}
 tar -xzvf strelka_workflow-1.0.15.tar.gz
 ```
 
 This will create a `strelka_workflow-1.0.15` folder. Go into the folder now and run:
 
-```bash
+```{bash}
 cd strelka_workflow-1.0.15
 ./configure --prefix=$HOME/usr/strelka/1.0.15
 make
@@ -87,17 +274,6 @@ For example, we can specify the databases to be installed in a refs folder in yo
 
 ```
 data.dir = $(HOME)/refs/snpeff/4.3
-```
-
-### Downloading Human Reference
-
-The human reference genome cannot be downloaded from this github repo as the file is too large. But the reference genome can be obtained from the [Genome Science Center FTP server](http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome/). We will put these the genome fasta and index file into the refs folder:
-
-```
-mkdir refs
-cd refs
-wget http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome/GRCh37-lite.fa
-wget http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome/GRCh37-lite.fa.fai
 ```
 
 ## Calling Variants
@@ -168,9 +344,14 @@ java -jar $(HOME)/usr/snpeff/4.3/SnpSift.jar \
 
 ## Post-Processing in R
 
-The final step is often the post-processing of the results in a data analysis language. In this workshop, we will use the data analysis language R for our post-processing. 
+The final step is often the post-processing of the results in a data analysis language. In this workshop, we will use the data analysis language R for our post-processing. The files we will be post-processing are in this repo:
 
-A rmarkdown file (analyze_snv_results.Rmd) has been provided that provides the R code to demonstrate some of the typical plots and analyses that can be generated from variant calling results. The rmarkdown file can be rendered into a html page that can be opened in a standard web browser (e.g. Google Chrome). You will need Rstudio (v0.99.903; tested on this version) in order to render the rmarkdown file. Also the following R packages need to be installed:
+* `strelka/HCC1395.strelka.full.txt`
+* `museq/HCC1395.museq.full.txt`
+
+These are the Strelka and MutationSeq runs on the full exome data as opposed to the subset of the exome which are what the bam files in the repository are. The full exome data though is processed through the same pipeline though.
+
+A rmarkdown file (`analyze_snv_results.Rmd`) has been provided that provides the R code to demonstrate some of the typical plots and analyses that can be generated from variant calling results. The rmarkdown file can be rendered into a html page that can be opened in a standard web browser (e.g. Google Chrome). You will need Rstudio (v0.99.903; tested on this version) in order to render the rmarkdown file. Also the following R packages need to be installed:
 
 * data.table (v1.9.6)
 * ggplot2 (v2.1.0)
@@ -178,7 +359,7 @@ A rmarkdown file (analyze_snv_results.Rmd) has been provided that provides the R
 * dplyr (v0.5.0)
 * stringr (v0.6.2)
 
-Now when you open the analyze_snv_results.Rmd file in Rstudio, you should be able to press the "Knit HTML") button and it should render the rmarkdown file into a html page.
+Now when you open the `analyze_snv_results.Rmd` file in Rstudio, you should be able to press the "Knit HTML") button and it should render the rmarkdown file into a html page.
 
 ## Pipeline
 
