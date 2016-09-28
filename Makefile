@@ -1,7 +1,15 @@
-.PHONY : strelka snpeff_download_db 
+.PHONY : bwa.index snpeff_download_db fastq strelka  
 
 STRELKA_PATH = $(HOME)/usr/strelka/1.0.15/bin
 SNPEFF_PATH = $(HOME)/usr/snpeff/4.3
+
+MUSEQ_PATH = $(HOME)/usr/museq/4.3.8/museq
+
+#----------
+# Setup Reference Genome
+#----------
+bwa.index :
+	bwa index refs/GRCh37-lite.fa 
 
 #----------
 # Setup SnpEff
@@ -18,22 +26,52 @@ snpeff_$(SNPEFF_GENOME).timestamp :
 		-c $(SNPEFF_PATH)/snpEff.config \
 		$(SNPEFF_GENOME) && touch $@
 
+#---------
+# Fastq Extraction
+#---------
+fastq : fastq/gerald_C1TD1ACXX_7_CGATGT_R1.fastq fastq/gerald_C1TD1ACXX_7_ATCACG_R1.fastq
+
+fastq/%_R1.fastq fastq/%_R2.fastq : bam/%.bam
+	picard SamToFastq \
+    INPUT=$< \
+    FASTQ=fastq/$*_R1.fastq \
+    SECOND_END_FASTQ=fastq/$*_R2.fastq
+
 #----------
-# Variant Calling
+# Sequence Alignment using BWA
 #----------
+sai/%.sai: fastq/%.fastq
+	mkdir -p $(@D); \
+	bwa aln refs/GRCh37-lite.fa $< > $@
+
+bam/HCC1395_exome_normal.bam : sai/gerald_C1TD1ACXX_7_CGATGT_R1.sai sai/gerald_C1TD1ACXX_7_CGATGT_R2.sai fastq/gerald_C1TD1ACXX_7_CGATGT_R1.fastq fastq/gerald_C1TD1ACXX_7_CGATGT_R2.fastq
+	bwa sampe refs/GRCh37-lite.fa $^ | samtools view -bh > $@
+
+bam/HCC1395_tumor_normal.bam : sai/gerald_C1TD1ACXX_7_ATCACG_R1.sai sai/gerald_C1TD1ACXX_7_ATCACG_R2.sai fastq/gerald_C1TD1ACXX_7_ATCACG_R1.fastq fastq/gerald_C1TD1ACXX_7_ATCACG_R2.fastq
+	bwa sampe refs/GRCh37-lite.fa $^ | samtools view -bh > $@
+
+#----------
+# Variant Calling 
+#----------
+
+# Run MutationSeq
+museq/HCC1395_exome_tumour_normal/results/HCC1395_exome_tumour_normal_museq.vcf : bam/HCC1395_exome_normal.17.7MB-8MB.bam bam/HCC1395_exome_tumour.17.7MB-8MB.bam
+	python $(MUSEQ_PATH)/classify.py \
+		normal:$< \
+		tumour:$(word 2,$^) \
+		reference:refs/GRCh37-lite.fa \
+		model:/usr/museq/4.3.8/museq/model_v4.1.2.npz
 
 # Run Strelka
 strelka : strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.vcf 
 
-strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.vcf :
+strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.vcf : bam/HCC1395_exome_normal.17.7MB-8MB.bam bam/HCC1395_exome_tumour.17.7MB-8MB.bam
 	$(STRELKA_PATH)/configureStrelkaWorkflow.pl \
-    --tumor bams/HCC1395_exome_tumour.17.7MB-8MB.bam \
-    --normal bams/HCC1395_exome_normal.17.7MB-8MB.bam \
-    --ref ~/share/references/genomes/gsc/GRCh37-lite.fa \
+    --normal $< \
+    --tumor $(word 2,$^) \
+    --ref refs/GRCh37-lite.fa \
     --config strelka/config/strelka_config_bwa_default.ini \
     --output-dir strelka/HCC1395_exome_tumour_normal
-
-# Run MutationSeq
 
 #----------
 # Annotating Variants
