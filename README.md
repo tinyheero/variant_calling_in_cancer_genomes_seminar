@@ -32,6 +32,42 @@ The repository provides the following files:
 * `Makefile`: A makefile pipeline that executes the commands in this workshop
 * `analyze_snv_results.Rmd`: A [rmarkdown](http://rmarkdown.rstudio.com/) file that demonstrates a standard post-processing analysis
 
+### Using Conda
+
+While not necessary, using conda for both installation and package management will make life easier and is recommended for this workshop. Conda is a package management system that is becoming popular in the field of bioinformatics for reproducible research. An increasing number of bioinformatics software are now being distributed through this system. 
+
+For this workshop, installation of different tools will be done by conda (when possible). When the tools are not in conda, instructions on how to manually install the software will be provided. To install conda, we can get it through [miniconda](http://conda.pydata.org/miniconda.html). First download miniconda (for python 2.7) and then run:
+
+```{bash}
+sh Miniconda2-latest-Linux-x86_64.sh
+```
+
+Then follow the instructions. When you have finished following the instructions, you should have python installed:
+
+```{bash}
+which conda
+~/miniconda2/bin/conda
+```
+
+If you choose not to use conda to install the software needed for this workshop, then you will have to manually install it by yourself. 
+
+### Getting the Full Data
+
+The original full exome data can be found https://github.com/genome/gms/wiki/HCC1395-WGS-Exome-RNA-Seq-Data. The repo contains in the `bam` folder two smaller tumor and normal bam files where only a 1 MB region on chromosome 17 is represented. This was done to file size issues. If you are interested in working with the whole exome data set, then you can follow these instructions:
+
+```
+wget https://xfer.genome.wustl.edu/gxfer1/project/gms/testdata/bams/hcc1395/gerald_C1TD1ACXX_7_CGATGT.bam # normal exome
+wget https://xfer.genome.wustl.edu/gxfer1/project/gms/testdata/bams/hcc1395/gerald_C1TD1ACXX_7_ATCACG.bam # tumor exome
+```
+
+Once these bam files have been downloaded, you will need to extract them as fastq files. Picard SamToFastq provides this functionality. To install this:
+
+```
+conda install -c bioconda picard
+picard SamToFastq --version
+```
+
+
 ### Installing MutationSeq
 
 MutationSeq can be downloaded from http://compbio.bccrc.ca/software/mutationseq. For this workshop, version 4.3.8 was used. Once you have downloaded it, extract it:
