@@ -55,7 +55,7 @@ If you choose not to use conda to install the software needed for this workshop,
 
 The first thing we will do is get a human reference to work with. The human reference genome cannot be downloaded from this github repo as the file is too large. But the reference genome can be obtained from the [Genome Science Center FTP server](http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome/). We will put these the genome fasta and index file into the refs folder:
 
-```
+```{bash}
 mkdir refs
 cd refs
 wget http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome/GRCh37-lite.fa
@@ -64,49 +64,79 @@ wget http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome/
 
 ### Getting the Full Exome Data
 
-> You can skip this section if you are content with working in the bam files that are in the repo. 
+> You can skip this section if you are content with working with the bam files that are in the repo. 
 
 The original full exome data can be found https://github.com/genome/gms/wiki/HCC1395-WGS-Exome-RNA-Seq-Data. The repo contains in the `bam` folder two smaller tumor and normal bam files where only a 1 MB region on chromosome 17 is represented. This was done to file size issues. If you are interested in working with the whole exome data set, then you can follow these instructions:
 
-```
+```{bash}
+cd bam
 wget https://xfer.genome.wustl.edu/gxfer1/project/gms/testdata/bams/hcc1395/gerald_C1TD1ACXX_7_CGATGT.bam # normal exome
 wget https://xfer.genome.wustl.edu/gxfer1/project/gms/testdata/bams/hcc1395/gerald_C1TD1ACXX_7_ATCACG.bam # tumor exome
 ```
 
-Once these bam files have been downloaded, you will need to extract them as fastq files. Picard SamToFastq provides this functionality. To install this:
+Once these bam files have been downloaded, you will need to extract them as fastq files. 
 
-```
+#### Bam to Fastq Conversion
+
+Picard SamToFastq provides this functionality. To install this:
+
+```{bash}
 conda install -c bioconda picard
 picard SamToFastq --version
 ```
 
 We can now extract to fastq by using the command for the normal exome:
 
-```
+```{bash}
 mkdir fastq;
 picard SamToFastq \
-  INPUT=gerald_C1TD1ACXX_7_CGATGT.bam \
+  INPUT=bam/gerald_C1TD1ACXX_7_CGATGT.bam \
   FASTQ=fastq/gerald_C1TD1ACXX_7_CGATGT_R1.fastq \
   SECOND_END_FASTQ=fastq/gerald_C1TD1ACXX_7_CGATGT_R2.fastq
 ```
 
 Now for the tumor exome:
 
-```
+```{bash}
 picard SamToFastq \
-  INPUT=gerald_C1TD1ACXX_7_ATCACG.bam \
+  INPUT=bam/gerald_C1TD1ACXX_7_ATCACG.bam \
   FASTQ=fastq/gerald_C1TD1ACXX_7_ATCACG_R1.fastq \
   SECOND_END_FASTQ=fastq/gerald_C1TD1ACXX_7_ATCACG_R2.fastq
 ```
 
-These extraction steps will take a fair bit of time. Once you have extracted these files, we can align them using bwa. By default bwa outputs sam files and for compression reasons we want to be working in the binary form of sam which is bam. We will also need samtools for this conversion. We can install bwa (v0.7.12) and samtools using conda:
+These extraction steps will take a fair bit of time. 
 
-```
+#### Sequence Alignment using BWA
+
+Once you have extracted these files, we can align them using bwa. By default bwa outputs sam files and for compression reasons we want to be working in the binary form of sam which is bam. We will also need samtools for this conversion. We can install bwa (v0.7.12) and samtools using conda:
+
+```{bash}
 conda install -c bioconda bwa=0.7.1.2 samtools
 ```
 
-We will need to first index the 
+We will need to first bwa index the genome:
 
+```{bash}
+bwa index refs/GRCh37-lite.fa
+```
+
+Once you have done this, we can align each exome. For the normal exome:
+
+```
+mkdir sai
+
+# bwa aln
+bwa aln refs/GRCh37-lite.fa fastq/gerald_C1TD1ACXX_7_CGATGT_R1.fastq > sai/gerald_C1TD1ACXX_7_CGATGT_R1.sai
+bwa aln refs/GRCh37-lite.fa fastq/gerald_C1TD1ACXX_7_CGATGT_R2.fastq > sai/gerald_C1TD1ACXX_7_CGATGT_R2.sai
+
+# bwa sampe
+bwa sampe refs/GRCh37-lite.fa \
+  sai/gerald_C1TD1ACXX_7_CGATGT_R1.sai \
+  sai/gerald_C1TD1ACXX_7_CGATGT_R2.sai \
+  fastq/gerald_C1TD1ACXX_7_CGATGT_R1.fastq \
+  fastq/gerald_C1TD1ACXX_7_CGATGT_R2.fastq | 
+  samtools view -bh > HCC1395_exome_normal.bam
+```
 
 ### Installing MutationSeq
 
