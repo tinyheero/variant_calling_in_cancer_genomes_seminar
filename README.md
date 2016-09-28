@@ -24,9 +24,13 @@ Feel free to contact me for help regarding the content in this workshop:
         - [Bam to Fastq Conversion](#bam-to-fastq-conversion)
         - [Sequence Alignment using BWA](#sequence-alignment-using-bwa)
     + [Installing MutationSeq](#installing-mutationseq)
+    + [Installing Strelka](#installing-strelka)
+    + [Installing SnpEff](#installing-snpeff)
 * [Calling Variants](#calling-variants)
+    + [Using Strelka](#using-strelka)
 * [Annotating Variants](#annotating-variants)
 * [Converting VCF to Table](#converting-vcf-to-table)
+* [Post-Processing in R](#post-processing-in-r)
 * [Pipeline](#pipeline)
 
 ## Setup
