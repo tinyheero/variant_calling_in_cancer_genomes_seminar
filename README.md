@@ -22,7 +22,7 @@ These instructions have been tested on a linux machine.
 
 git clone this repository:
 
-```
+```{bash}
 git clone git@github.com:tinyheero/variant_calling_in_cancer_genomes_seminar.git
 ```
 
@@ -36,15 +36,15 @@ The repository provides the following files:
 
 MutationSeq can be downloaded from http://compbio.bccrc.ca/software/mutationseq. For this workshop, version 4.3.8 was used. Once you have downloaded it, extract it:
 
-```bash
-$ tar -xzvf museq_4.3.8.tar.gz
+```{bash}
+tar -xzvf museq_4.3.8.tar.gz
 ```
 
 This will extract the content into a folder `mutationseq`. We will move the files into `$HOME/usr/museq/4.3.8` for organization purposes:
 
 ```
-$ mkdir -p $HOME/usr/museq/4.3.8
-$ mv mutationseq/* $HOME/usr/museq/4.3.8
+mkdir -p $HOME/usr/museq/4.3.8
+mv mutationseq/* $HOME/usr/museq/4.3.8
 ```
 
 Now we need to install MutationSeq. MutationSeq requires python (v2.7) and several key package dependencies:
@@ -57,35 +57,35 @@ Now we need to install MutationSeq. MutationSeq requires python (v2.7) and sever
 
 The best way to install all of this is to use either [Miniconda](http://conda.pydata.org/miniconda.html) or anaconda. We will use miniconda here. First download miniconda (for python 2.7) and then run:
 
-```
-$ sh Miniconda2-latest-Linux-x86_64.sh
+```{bash}
+sh Miniconda2-latest-Linux-x86_64.sh
 ```
 
 Then follow the instructions. When you have finished following the instructions, you should have python installed:
 
-```
-$ which python
+```{bash}
+which python
 ~/miniconda2/bin/python
 ```
 
 Now we can install the dependencies needed:
 
-```
-$ conda install numpy scipy matplotlib scikit-learn intervaltree
+```{bash}
+conda install numpy scipy matplotlib scikit-learn intervaltree
 ```
 
 One last thing that is needed before we can install MutationSeq is the Boost C libraries. We only need to download them from http://www.boost.org/. Once you have downloaded (tested on 1.51) just extract them to a location. For example, you could put it into `$HOME/usr/boost/1.51`
 
 Once this has been installed, we can now proceed to installing MutationSeq.
 
-```
-$ make PYTHON=python BOOSTPATH=$HOME/usr/boost/1.51
+```{bash}
+make PYTHON=python BOOSTPATH=$HOME/usr/boost/1.51
 ```
 
 Now when you run:
 
-```
-$ python $HOME/usr/museq/4.3.8/museq/classify.py --version
+```{bash}
+python $HOME/usr/museq/4.3.8/museq/classify.py --version
 4.3.8
 ```
 
@@ -96,13 +96,13 @@ This indicates that you have successfully installed MutationSeq.
 
 Strelka can be downloaded from https://sites.google.com/site/strelkasomaticvariantcaller/home/download as a .tar.gz file. For this workshop, version 1.0.15 was used. Once you have it downloaded, extract it:
 
-```bash
+```{bash}
 tar -xzvf strelka_workflow-1.0.15.tar.gz
 ```
 
 This will create a `strelka_workflow-1.0.15` folder. Go into the folder now and run:
 
-```bash
+```{bash}
 cd strelka_workflow-1.0.15
 ./configure --prefix=$HOME/usr/strelka/1.0.15
 make
