@@ -26,23 +26,47 @@ git clone this repository:
 git clone git@github.com:tinyheero/variant_calling_in_cancer_genomes_seminar.git
 ```
 
+The repository provides the following files:
+
+* `bams`: These are the BWA aligned exome bam files that will be used in this tutorial. The bam files have been restricted to a 1 MB region on chromosome 17.
+
 ### Installing Strelka
 
 Strelka can be downloaded from https://sites.google.com/site/strelkasomaticvariantcaller/home/download as a .tar.gz file. For this workshop, version 1.0.15 was used. Once you have it downloaded, extract it:
 
-```
+```bash
 tar -xzvf strelka_workflow-1.0.15.tar.gz
 ```
 
 This will create a `strelka_workflow-1.0.15` folder. Go into the folder now and run:
 
-```
+```bash
 cd strelka_workflow-1.0.15
 ./configure --prefix=$HOME/usr/strelka/1.0.15
 make
 ```
 
 This will install strelka into your home directory folder at `$(HOME)/usr/strelka/1.0.15`. 
+
+Because we are working with exome data in this workshop, we need to make a small adjustment to the Strelka configuration file. After you have finished installing Strelka, there will be a configuration file `strelka_config_bwa_default.ini` (this is Strelka bwa specific configuration). In this file, there is a line:
+
+```
+isSkipDepthFilters = 0
+```
+
+According to the Strelka FAQ page:
+
+> The depth filter is designed to filter out all variants which are called above a multiple of the mean chromosome depth, the default configuration is set to filter variants with a depth greater than 3x the chromosomal mean. If you are using exome/targeted sequencing data, the depth filter should be turned off…
+>
+> However in whole exome sequencing data, the mean chromosomal depth will be extremely small, resulting in nearly all variants being (improperly) filtered out.
+
+Sine we are working with exome data here, this value should be set to 1:
+
+```
+isSkipDepthFilters = 1
+```
+
+The `strelka/config/strelka_config_bwa_default.ini` in this repo is provided to demonstrate this. We will use this file for the workshop.
 
 ### Installing SnpEff
 
