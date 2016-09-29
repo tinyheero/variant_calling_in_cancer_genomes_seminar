@@ -1,4 +1,4 @@
-.PHONY : bwa.index snpeff_download_db fastq strelka  
+.PHONY : bwa.index snpeff_download_db fastq bam strelka 
 
 STRELKA_PATH = $(HOME)/usr/strelka/1.0.15/bin
 SNPEFF_PATH = $(HOME)/usr/snpeff/4.3
@@ -26,6 +26,21 @@ snpeff_$(SNPEFF_GENOME).timestamp :
 		-c $(SNPEFF_PATH)/snpEff.config \
 		$(SNPEFF_GENOME) && touch $@
 
+#----------
+# Download Full Exome Data
+#----------
+download : bam/gerald_C1TD1ACXX_7_CGATGT.bam bam/gerald_C1TD1ACXX_7_ATCACG.bam
+
+# Exome Normal
+bam/gerald_C1TD1ACXX_7_CGATGT.bam :
+	mkdir -p $(@D); \
+	wget -p $(@D) https://xfer.genome.wustl.edu/gxfer1/project/gms/testdata/bams/hcc1395/gerald_C1TD1ACXX_7_CGATGT.bam
+
+# Exome Tumor
+bam/gerald_C1TD1ACXX_7_ATCACG.bam :
+	mkdir -p $(@D); \
+	wget -p $(@D) https://xfer.genome.wustl.edu/gxfer1/project/gms/testdata/bams/hcc1395/gerald_C1TD1ACXX_7_ATCACG.bam
+
 #---------
 # Fastq Extraction
 #---------
@@ -42,13 +57,19 @@ fastq/%_R1.fastq fastq/%_R2.fastq : bam/%.bam
 #----------
 sai/%.sai: fastq/%.fastq
 	mkdir -p $(@D); \
-	bwa aln refs/GRCh37-lite.fa $< > $@
+	bwa aln -t 4 refs/GRCh37-lite.fa $< > $@ 2> log/$(@F).log
+
+bam : bam/HCC1395_exome_normal.bam bam/HCC1395_tumor_normal.bam
 
 bam/HCC1395_exome_normal.bam : sai/gerald_C1TD1ACXX_7_CGATGT_R1.sai sai/gerald_C1TD1ACXX_7_CGATGT_R2.sai fastq/gerald_C1TD1ACXX_7_CGATGT_R1.fastq fastq/gerald_C1TD1ACXX_7_CGATGT_R2.fastq
 	bwa sampe refs/GRCh37-lite.fa $^ | samtools view -bh > $@
 
 bam/HCC1395_tumor_normal.bam : sai/gerald_C1TD1ACXX_7_ATCACG_R1.sai sai/gerald_C1TD1ACXX_7_ATCACG_R2.sai fastq/gerald_C1TD1ACXX_7_ATCACG_R1.fastq fastq/gerald_C1TD1ACXX_7_ATCACG_R2.fastq
 	bwa sampe refs/GRCh37-lite.fa $^ | samtools view -bh > $@
+
+# Generate Samtools Index
+%.bam.bai : %.bam
+	samtools index $<
 
 #----------
 # Variant Calling 
