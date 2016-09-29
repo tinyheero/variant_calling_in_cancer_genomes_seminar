@@ -73,14 +73,22 @@ bam/HCC1395_exome_tumour.bam : sai/gerald_C1TD1ACXX_7_ATCACG_R1.sai sai/gerald_C
 #----------
 # Post-Processing of BAM Files
 #----------
-bam.markdup : bam/HCC1395_exome_normal.markdup.bam bam/HCC1395_exome_tumour.markdup.bam
+bam.sort.markdup : bam/HCC1395_exome_normal.sort.markdup.bam bam/HCC1395_exome_tumour.sort.markdup.bam
+
+bam/%.sort.bam : bam/%.bam
+	picard SortSam \
+		I=$< \
+		O=$@ \
+		SORT_ORDER=coordinate \
+		VALIDATION_STRINGENCY=LENIENT 
 
 bam/%.markdup.bam : bam/%.bam
 	mkdir -p bam/markdup_stats; \
 	picard MarkDuplicates \
 		I=$< \
 		O=$@ \
-		M=bam/markdup_stats/%*_marked_dup_metrics.txt
+		M=bam/markdup_stats/$*_marked_dup_metrics.txt \
+		VALIDATION_STRINGENCY=LENIENT 
 
 # Generate Samtools Index
 %.bam.bai : %.bam
