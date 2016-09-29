@@ -1,4 +1,4 @@
-.PHONY : bwa.index snpeff_download_db fastq bam strelka 
+.PHONY : bwa.index snpeff_download_db fastq bam bam.markdup strelka 
 
 STRELKA_PATH = $(HOME)/usr/strelka/1.0.15/bin
 SNPEFF_PATH = $(HOME)/usr/snpeff/4.3
@@ -44,7 +44,10 @@ bam/gerald_C1TD1ACXX_7_ATCACG.bam :
 #---------
 # Fastq Extraction
 #---------
-fastq : fastq/gerald_C1TD1ACXX_7_CGATGT_R1.fastq fastq/gerald_C1TD1ACXX_7_ATCACG_R1.fastq
+fastq : fastq/gerald_C1TD1ACXX_7_CGATGT_R1.fastq \
+	fastq/gerald_C1TD1ACXX_7_CGATGT_R2.fastq \
+	fastq/gerald_C1TD1ACXX_7_ATCACG_R1.fastq \
+	fastq/gerald_C1TD1ACXX_7_ATCACG_R2.fastq
 
 fastq/%_R1.fastq fastq/%_R2.fastq : bam/%.bam
 	picard SamToFastq \
@@ -59,13 +62,25 @@ sai/%.sai: fastq/%.fastq
 	mkdir -p $(@D); \
 	bwa aln -t 4 refs/GRCh37-lite.fa $< > $@ 2> log/$(@F).log
 
-bam : bam/HCC1395_exome_normal.bam bam/HCC1395_tumor_normal.bam
+bam : bam/HCC1395_exome_normal.bam bam/HCC1395_exome_tumour.bam
 
 bam/HCC1395_exome_normal.bam : sai/gerald_C1TD1ACXX_7_CGATGT_R1.sai sai/gerald_C1TD1ACXX_7_CGATGT_R2.sai fastq/gerald_C1TD1ACXX_7_CGATGT_R1.fastq fastq/gerald_C1TD1ACXX_7_CGATGT_R2.fastq
 	bwa sampe refs/GRCh37-lite.fa $^ | samtools view -bh > $@
 
-bam/HCC1395_tumor_normal.bam : sai/gerald_C1TD1ACXX_7_ATCACG_R1.sai sai/gerald_C1TD1ACXX_7_ATCACG_R2.sai fastq/gerald_C1TD1ACXX_7_ATCACG_R1.fastq fastq/gerald_C1TD1ACXX_7_ATCACG_R2.fastq
+bam/HCC1395_exome_tumour.bam : sai/gerald_C1TD1ACXX_7_ATCACG_R1.sai sai/gerald_C1TD1ACXX_7_ATCACG_R2.sai fastq/gerald_C1TD1ACXX_7_ATCACG_R1.fastq fastq/gerald_C1TD1ACXX_7_ATCACG_R2.fastq
 	bwa sampe refs/GRCh37-lite.fa $^ | samtools view -bh > $@
+
+#----------
+# Post-Processing of BAM Files
+#----------
+bam.markdup : bam/HCC1395_exome_normal.markdup.bam bam/HCC1395_exome_tumour.markdup.bam
+
+bam/%.markdup.bam : bam/%.bam
+	mkdir -p bam/markdup_stats; \
+	picard MarkDuplicates \
+		I=$< \
+		O=$@ \
+		M=bam/markdup_stats/%*_marked_dup_metrics.txt
 
 # Generate Samtools Index
 %.bam.bai : %.bam
