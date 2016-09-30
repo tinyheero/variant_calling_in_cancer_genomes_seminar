@@ -2,7 +2,7 @@
 
 * Date: Sept 27, 2016
 * Time: 12-1pm
-* Location: Dorothy Lam Boardroom
+* Location: Dorothy Lam Boardroom, British Columbia Cancer Research Centre, Vancouver, BC, Canada.
 
 This repository provides instructions on how to perform variant calling in cancer genome data. Specifically, the dataset is a matching tumor and normal exome from a breast cancer cell-line (HCC1395). The data is available from https://github.com/genome/gms/wiki/HCC1395-WGS-Exome-RNA-Seq-Data. 
 
