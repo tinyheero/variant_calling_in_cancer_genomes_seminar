@@ -95,27 +95,65 @@ bam/%.markdup.bam : bam/%.bam
 	samtools index $<
 
 #----------
+# Filter Bam for Only 1MB region of Chromosome 17 
+#----------
+filtered.bam : \
+	bam/HCC1395_exome_normal.sort.markdup.17.7MB-8MB.bam \
+	bam/HCC1395_exome_normal.sort.markdup.17.7MB-8MB.bam.bai \
+	bam/HCC1395_exome_tumour.sort.markdup.17.7MB-8MB.bam \
+	bam/HCC1395_exome_tumour.sort.markdup.17.7MB-8MB.bam.bai
+
+bam/HCC1395_exome_normal.sort.markdup.17.7MB-8MB.bam : bam/HCC1395_exome_normal.sort.markdup.bam
+	samtools view -b $< 17:7000000-8000000 > $@
+
+bam/HCC1395_exome_tumour.sort.markdup.17.7MB-8MB.bam : bam/HCC1395_exome_tumour.sort.markdup.bam
+	samtools view -b $< 17:7000000-8000000 > $@
+
+#----------
 # Variant Calling 
 #----------
 
-# Run MutationSeq
-museq/HCC1395_exome_tumour_normal/results/HCC1395_exome_tumour_normal_museq.vcf : bam/HCC1395_exome_normal.17.7MB-8MB.bam bam/HCC1395_exome_tumour.17.7MB-8MB.bam
+# Run MutationSeq on Full Exome
+museq/vcf/HCC1395_exome_tumour_normal.vcf : bam/HCC1395_exome_normal.sort.markdup.bam bam/HCC1395_exome_tumour.sort.markdup.bam bam/HCC1395_exome_normal.sort.markdup.bam.bai bam/HCC1395_exome_tumour.sort.markdup.bam.bai
+	mkdir -p $(@D); \
 	python $(MUSEQ_PATH)/classify.py \
 		normal:$< \
 		tumour:$(word 2,$^) \
 		reference:refs/GRCh37-lite.fa \
-		model:/usr/museq/4.3.8/museq/model_v4.1.2.npz
+		model:$(MUSEQ_PATH)/models_anaconda/model_v4.1.2_anaconda_sk_0.13.1.npz \
+		-c $(MUSEQ_PATH)/metadata.config \
+		-o $@
+
+# Run MutationSeq on Sampled Exome
+museq/vcf/HCC1395_exome_tumour_normal_17.vcf : bam/HCC1395_exome_normal.sort.markdup.17.7MB-8MB.bam bam/HCC1395_exome_tumour.sort.markdup.17.7MB-8MB.bam
+	mkdir -p $(@D); \
+	python $(MUSEQ_PATH)/classify.py \
+		normal:$< \
+		tumour:$(word 2,$^) \
+		reference:refs/GRCh37-lite.fa \
+		model:$(MUSEQ_PATH)/models_anaconda/model_v4.1.2_anaconda_sk_0.13.1.npz \
+		-c $(MUSEQ_PATH)/metadata.config \
+		-o $@
 
 # Run Strelka
 strelka : strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.vcf 
 
-strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.vcf : bam/HCC1395_exome_normal.17.7MB-8MB.bam bam/HCC1395_exome_tumour.17.7MB-8MB.bam
+strelka/HCC1395_exome_tumour_normal_17/results/passed.somatic.snvs.vcf : bam/HCC1395_exome_normal.sort.markdup.17.7MB-8MB.bam bam/HCC1395_exome_tumour.sort.markdup.17.7MB-8MB.bam
 	$(STRELKA_PATH)/configureStrelkaWorkflow.pl \
     --normal $< \
     --tumor $(word 2,$^) \
     --ref refs/GRCh37-lite.fa \
     --config strelka/config/strelka_config_bwa_default.ini \
-    --output-dir strelka/HCC1395_exome_tumour_normal
+    --output-dir strelka/HCC1395_exome_tumour_normal_17
+
+strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.vcf : bam/HCC1395_exome_normal.sort.markdup.bam bam/HCC1395_exome_tumour.sort.markdup.bam
+	$(STRELKA_PATH)/configureStrelkaWorkflow.pl \
+    --normal $< \
+    --tumor $(word 2,$^) \
+    --ref refs/GRCh37-lite.fa \
+    --config strelka/config/strelka_config_bwa_default.ini \
+    --output-dir strelka/HCC1395_exome_tumour_normal && \
+	make -C strelka/HCC1395_exome_tumour_normal
 
 #----------
 # Annotating Variants
