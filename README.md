@@ -282,7 +282,16 @@ data.dir = $(HOME)/refs/snpeff/4.3
 
 ### Using MutationSeq
 
-Coming soon...
+```
+mkdir -p museq/vcf; \
+python $(HOME)/usr/museq/4.3.8/museq/classify.py \
+  normal:bam/HCC1395_exome_normal.sort.markdup.17.7MB-8MB.bam \
+  tumour:bam/HCC1395_exome_tumour.sort.markdup.17.7MB-8MB.bam \
+  reference:refs/GRCh37-lite.fa \
+  model:$(HOME)/museq/4.3.8/museq/models_anaconda/model_v4.1.2_anaconda_sk_0.13.1.npz \
+  -c $(HOME)/usr/museq/4.3.8/museq/metadata.config \
+  -o museq/vcf/HCC1395_exome_tumour_normal_17.vcf
+```
 
 ### Using Strelka
 
@@ -294,13 +303,13 @@ $(HOME)/usr/strelka/1.0.15/bin/configureStrelkaWorkflow.pl \
   --normal bams/HCC1395_exome_normal.17.7MB-8MB.bam \
   --ref refs/GRCh37-lite.fa \
   --config strelka/config/strelka_config_bwa_default.ini \
-  --output-dir strelka/HCC1395_exome_tumour_normal
+  --output-dir strelka/HCC1395_exome_tumour_normal_17
 ```
 
 This will setup the Strelka run, now do the following:
 
 ```
-cd strelka/HCC1395_exome_tumour_normal
+cd strelka/HCC1395_exome_tumour_normal_17
 make
 ```
 
@@ -315,14 +324,24 @@ We will annotate variants using [SnpEff](http://snpeff.sourceforge.net/). Other 
 * [Annovar](http://annovar.openbioinformatics.org/en/latest/)
 * [VEP](http://uswest.ensembl.org/info/docs/tools/vep/index.html)
 
-Once we have the 
+Once we have the vcf files from MutationSeq and Strelka, we can use the following commands:
 
 ```
+# Annotating MutationSeq Vcf
 java -Xmx4G -jar $(HOME)/usr/snpeff/4.3/snpEff.jar \
   -canon \
   GRCh37.75 \
-  -s strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.snpeff.summary.html \
-  strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.vcf > strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.snpeff.vcf
+  -s museq/vcf/HCC1395_exome_tumour_normal.snpeff.summary.html \
+  museq/vcf/HCC1395_exome_tumour_normal_17.vcf \
+  > museq/vcf/HCC1395_exome_tumour_normal.snpeff.vcf
+
+# Annotating Strelka Vcf
+java -Xmx4G -jar $(HOME)/usr/snpeff/4.3/snpEff.jar \
+  -canon \
+  GRCh37.75 \
+  -s strelka/HCC1395_exome_tumour_normal_17/results/passed.somatic.snvs.snpeff.summary.html \
+  strelka/HCC1395_exome_tumour_normal_17/results/passed.somatic.snvs.vcf \
+  > strelka/HCC1395_exome_tumour_normal_17/results/passed.somatic.snvs.snpeff.vcf
 ```
 
 ## Converting VCF to Table
@@ -345,7 +364,7 @@ java -jar $(HOME)/usr/snpeff/4.3/SnpSift.jar \
   ANN[*].BIOTYPE ANN[*].RANK ANN[*].HGVS_C ANN[*].HGVS_P ANN[*].CDNA_POS \
   ANN[*].CDNA_LEN ANN[*].CDS_POS ANN[*].CDS_LEN ANN[*].AA_POS \
   ANN[*].AA_LEN ANN[*].DISTANCE ANN[*].ERRORS \
-  > strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.snpeff.tsv
+  > strelka/HCC1395_exome_tumour_normal_17/results/passed.somatic.snvs.snpeff.tsv
 ```
 
 ## Post-Processing in R

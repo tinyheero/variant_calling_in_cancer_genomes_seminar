@@ -135,9 +135,6 @@ museq/vcf/HCC1395_exome_tumour_normal_17.vcf : bam/HCC1395_exome_normal.sort.mar
 		-c $(MUSEQ_PATH)/metadata.config \
 		-o $@
 
-# Run Strelka
-strelka : strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.vcf 
-
 strelka/HCC1395_exome_tumour_normal_17/results/passed.somatic.snvs.vcf : bam/HCC1395_exome_normal.sort.markdup.17.7MB-8MB.bam bam/HCC1395_exome_tumour.sort.markdup.17.7MB-8MB.bam
 	$(STRELKA_PATH)/configureStrelkaWorkflow.pl \
     --normal $< \
