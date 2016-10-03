@@ -2,7 +2,7 @@
 
 * Date: Sept 27, 2016
 * Time: 12-1pm
-* Location: Dorothy Lam Boardroom
+* Location: Dorothy Lam Boardroom, British Columbia Cancer Research Centre, Vancouver, BC, Canada.
 
 This repository provides instructions on how to perform variant calling in cancer genome data. Specifically, the dataset is a matching tumor and normal exome from a breast cancer cell-line (HCC1395). The data is available from https://github.com/genome/gms/wiki/HCC1395-WGS-Exome-RNA-Seq-Data. 
 
@@ -27,6 +27,7 @@ Feel free to contact me for help regarding the content in this workshop:
     + [Installing Strelka](#installing-strelka)
     + [Installing SnpEff](#installing-snpeff)
 * [Calling Variants](#calling-variants)
+    + [Using MutationSeq](#using-mutationseq)
     + [Using Strelka](#using-strelka)
 * [Annotating Variants](#annotating-variants)
 * [Converting VCF to Table](#converting-vcf-to-table)
@@ -172,7 +173,7 @@ mkdir -p $HOME/usr/museq/4.3.8
 mv mutationseq/* $HOME/usr/museq/4.3.8
 ```
 
-Now we need to install MutationSeq. MutationSeq requires python (v2.7) and several key package dependencies:
+Now we need to install MutationSeq. MutationSeq requires python (v2.7) and several key package dependencies. 
 
 * numpy
 * scipy
@@ -193,18 +194,18 @@ which python
 ~/miniconda2/bin/python
 ```
 
-Now we can install the dependencies needed:
+Now we can install the dependencies needed (NOTE: Versions and specified to ensure compatibility)
 
 ```{bash}
-conda install numpy scipy matplotlib scikit-learn intervaltree
+conda install -c bioconda numpy=1.7.1 scipy=0.12.0 scikit-learn=0.13.1 matplotlib=1.2.1 intervaltree
 ```
 
 One last thing that is needed before we can install MutationSeq is the Boost C libraries. We only need to download them from http://www.boost.org/. Once you have downloaded (tested on 1.51) just extract them to a location. For example, you could put it into `$HOME/usr/boost/1.51`
 
-Once this has been installed, we can now proceed to installing MutationSeq.
+Once this has been installed, we can now proceed to compiling a dependency `pybam.so` (this may be provided in the .tar.gz, but it's better to compile on your own system to ensure that it does work).
 
 ```{bash}
-make PYTHON=python BOOSTPATH=$HOME/usr/boost/1.51
+make PYTHON=python BOOSTPATH=$HOME/usr/boost/1.51 -B
 ```
 
 Now when you run:
@@ -216,6 +217,7 @@ python $HOME/usr/museq/4.3.8/museq/classify.py --version
 
 This indicates that you have successfully installed MutationSeq.
 
+> An important thing to note is that MutationSeq comes bundled with a trained classifer using the [scikit-learn](http://scikit-learn.org/) library and packaged as a pickle. The pickle is only compatible with the specific scikit-learn version that it was built with. As we are using miniconda here with scikit-learn version 0.13.1, we will have to use the corresponding models associated with that version. See [Calling Variants - Using MutationSeq](#using-mutationseq) for more details.
 
 ### Installing Strelka
 
@@ -277,6 +279,10 @@ data.dir = $(HOME)/refs/snpeff/4.3
 ```
 
 ## Calling Variants
+
+### Using MutationSeq
+
+Coming soon...
 
 ### Using Strelka
 

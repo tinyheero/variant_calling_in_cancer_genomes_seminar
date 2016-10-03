@@ -235,6 +235,11 @@ strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.snpeff.tsv : str
 		> $@
 
 #----------
+# Run Pipeline
+#----------
+variant_call : strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.snpeff.tsv
+
+#----------
 # Knit Rmarkdown Page
 #----------
 %.html : %.Rmd
