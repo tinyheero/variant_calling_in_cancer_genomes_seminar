@@ -278,6 +278,15 @@ For example, we can specify the databases to be installed in a refs folder in yo
 data.dir = $(HOME)/refs/snpeff/4.3
 ```
 
+Now we need to build the genome database that we will annotate against. Specifically, we will use the GRCh37.75 genome.
+
+```
+java -Xmx4G -jar $(HOME)/usr/snpeff/4.3/snpEff.jar \
+  download \
+  -c $(HOME)/usr/snpeff/4.3/snpEff.config \
+  GRCh37.75
+```
+
 ## Calling Variants
 
 ### Using MutationSeq
