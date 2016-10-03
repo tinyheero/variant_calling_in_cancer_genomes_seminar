@@ -1,7 +1,15 @@
-.PHONY : strelka snpeff_download_db 
+.PHONY : bwa.index snpeff_download_db fastq bam bam.markdup strelka 
 
 STRELKA_PATH = $(HOME)/usr/strelka/1.0.15/bin
 SNPEFF_PATH = $(HOME)/usr/snpeff/4.3
+
+MUSEQ_PATH = $(HOME)/usr/museq/4.3.8/museq
+
+#----------
+# Setup Reference Genome
+#----------
+bwa.index :
+	bwa index refs/GRCh37-lite.fa 
 
 #----------
 # Setup SnpEff
@@ -19,21 +27,95 @@ snpeff_$(SNPEFF_GENOME).timestamp :
 		$(SNPEFF_GENOME) && touch $@
 
 #----------
-# Variant Calling
+# Download Full Exome Data
 #----------
+download : bam/gerald_C1TD1ACXX_7_CGATGT.bam bam/gerald_C1TD1ACXX_7_ATCACG.bam
+
+# Exome Normal
+bam/gerald_C1TD1ACXX_7_CGATGT.bam :
+	mkdir -p $(@D); \
+	wget -p $(@D) https://xfer.genome.wustl.edu/gxfer1/project/gms/testdata/bams/hcc1395/gerald_C1TD1ACXX_7_CGATGT.bam
+
+# Exome Tumor
+bam/gerald_C1TD1ACXX_7_ATCACG.bam :
+	mkdir -p $(@D); \
+	wget -p $(@D) https://xfer.genome.wustl.edu/gxfer1/project/gms/testdata/bams/hcc1395/gerald_C1TD1ACXX_7_ATCACG.bam
+
+#---------
+# Fastq Extraction
+#---------
+fastq : fastq/gerald_C1TD1ACXX_7_CGATGT_R1.fastq \
+	fastq/gerald_C1TD1ACXX_7_CGATGT_R2.fastq \
+	fastq/gerald_C1TD1ACXX_7_ATCACG_R1.fastq \
+	fastq/gerald_C1TD1ACXX_7_ATCACG_R2.fastq
+
+fastq/%_R1.fastq fastq/%_R2.fastq : bam/%.bam
+	picard SamToFastq \
+    INPUT=$< \
+    FASTQ=fastq/$*_R1.fastq \
+    SECOND_END_FASTQ=fastq/$*_R2.fastq
+
+#----------
+# Sequence Alignment using BWA
+#----------
+sai/%.sai: fastq/%.fastq
+	mkdir -p $(@D); \
+	bwa aln -t 4 refs/GRCh37-lite.fa $< > $@ 2> log/$(@F).log
+
+bam : bam/HCC1395_exome_normal.bam bam/HCC1395_exome_tumour.bam
+
+bam/HCC1395_exome_normal.bam : sai/gerald_C1TD1ACXX_7_CGATGT_R1.sai sai/gerald_C1TD1ACXX_7_CGATGT_R2.sai fastq/gerald_C1TD1ACXX_7_CGATGT_R1.fastq fastq/gerald_C1TD1ACXX_7_CGATGT_R2.fastq
+	bwa sampe refs/GRCh37-lite.fa $^ | samtools view -bh > $@
+
+bam/HCC1395_exome_tumour.bam : sai/gerald_C1TD1ACXX_7_ATCACG_R1.sai sai/gerald_C1TD1ACXX_7_ATCACG_R2.sai fastq/gerald_C1TD1ACXX_7_ATCACG_R1.fastq fastq/gerald_C1TD1ACXX_7_ATCACG_R2.fastq
+	bwa sampe refs/GRCh37-lite.fa $^ | samtools view -bh > $@
+
+#----------
+# Post-Processing of BAM Files
+#----------
+bam.sort.markdup : bam/HCC1395_exome_normal.sort.markdup.bam bam/HCC1395_exome_tumour.sort.markdup.bam
+
+bam/%.sort.bam : bam/%.bam
+	picard SortSam \
+		I=$< \
+		O=$@ \
+		SORT_ORDER=coordinate \
+		VALIDATION_STRINGENCY=LENIENT 
+
+bam/%.markdup.bam : bam/%.bam
+	mkdir -p bam/markdup_stats; \
+	picard MarkDuplicates \
+		I=$< \
+		O=$@ \
+		M=bam/markdup_stats/$*_marked_dup_metrics.txt \
+		VALIDATION_STRINGENCY=LENIENT 
+
+# Generate Samtools Index
+%.bam.bai : %.bam
+	samtools index $<
+
+#----------
+# Variant Calling 
+#----------
+
+# Run MutationSeq
+museq/HCC1395_exome_tumour_normal/results/HCC1395_exome_tumour_normal_museq.vcf : bam/HCC1395_exome_normal.17.7MB-8MB.bam bam/HCC1395_exome_tumour.17.7MB-8MB.bam
+	python $(MUSEQ_PATH)/classify.py \
+		normal:$< \
+		tumour:$(word 2,$^) \
+		reference:refs/GRCh37-lite.fa \
+		model:/usr/museq/4.3.8/museq/model_v4.1.2.npz
 
 # Run Strelka
 strelka : strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.vcf 
 
-strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.vcf :
+strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.vcf : bam/HCC1395_exome_normal.17.7MB-8MB.bam bam/HCC1395_exome_tumour.17.7MB-8MB.bam
 	$(STRELKA_PATH)/configureStrelkaWorkflow.pl \
-    --tumor bams/HCC1395_exome_tumour.17.7MB-8MB.bam \
-    --normal bams/HCC1395_exome_normal.17.7MB-8MB.bam \
-    --ref ~/share/references/genomes/gsc/GRCh37-lite.fa \
+    --normal $< \
+    --tumor $(word 2,$^) \
+    --ref refs/GRCh37-lite.fa \
     --config strelka/config/strelka_config_bwa_default.ini \
     --output-dir strelka/HCC1395_exome_tumour_normal
-
-# Run MutationSeq
 
 #----------
 # Annotating Variants
