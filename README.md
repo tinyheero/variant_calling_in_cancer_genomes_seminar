@@ -27,6 +27,7 @@ Feel free to contact me for help regarding the content in this workshop:
     + [Installing Strelka](#installing-strelka)
     + [Installing SnpEff](#installing-snpeff)
 * [Calling Variants](#calling-variants)
+    + [Using MutationSeq](#using-mutationseq)
     + [Using Strelka](#using-strelka)
 * [Annotating Variants](#annotating-variants)
 * [Converting VCF to Table](#converting-vcf-to-table)
@@ -276,6 +277,10 @@ data.dir = $(HOME)/refs/snpeff/4.3
 ```
 
 ## Calling Variants
+
+### Using MutationSeq
+
+Coming soon...
 
 ### Using Strelka
 
