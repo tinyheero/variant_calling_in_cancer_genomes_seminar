@@ -217,6 +217,8 @@ python $HOME/usr/museq/4.3.8/museq/classify.py --version
 
 This indicates that you have successfully installed MutationSeq.
 
+> An important thing to note is that MutationSeq comes bundled with a trained classifer using the [scikit-learn](http://scikit-learn.org/) library and packaged as a pickle. The pickle is only compatible with the specific scikit-learn version that it was built with. As we are using miniconda here with scikit-learn version 0.13.1, we will have to use the corresponding models associated with that version. See [Calling Variants - Using MutationSeq](#using-mutationseq) for more details.
+
 ### Installing Strelka
 
 Strelka can be downloaded from https://sites.google.com/site/strelkasomaticvariantcaller/home/download as a .tar.gz file. For this workshop, version 1.0.15 was used. Once you have it downloaded, extract it:
