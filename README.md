@@ -130,7 +130,7 @@ These extraction steps will take a fair bit of time.
 Once you have extracted these files, we can align them using bwa. By default bwa outputs sam files and for compression reasons we want to be working in the binary form of sam which is bam. We will also need samtools for this conversion. We can install bwa (v0.7.12) and samtools using conda:
 
 ```{bash}
-conda install -c bioconda bwa=0.7.1.2 samtools
+conda install -c bioconda bwa=0.7.12 samtools
 ```
 
 We will need to first bwa index the genome:
