@@ -114,7 +114,7 @@ bam/HCC1395_exome_tumour.sort.markdup.17.7MB-8MB.bam : bam/HCC1395_exome_tumour.
 #----------
 
 # Run MutationSeq on Full Exome
-museq/vcf/HCC1395_exome_tumour_normal.vcf : bam/HCC1395_exome_normal.sort.markdup.bam bam/HCC1395_exome_tumour.sort.markdup.bam bam/HCC1395_exome_normal.sort.markdup.bam.bai bam/HCC1395_exome_tumour.sort.markdup.bam.bai
+museq/results/HCC1395_exome_tumour_normal.vcf : bam/HCC1395_exome_normal.sort.markdup.bam bam/HCC1395_exome_tumour.sort.markdup.bam bam/HCC1395_exome_normal.sort.markdup.bam.bai bam/HCC1395_exome_tumour.sort.markdup.bam.bai
 	mkdir -p $(@D); \
 	python $(MUSEQ_PATH)/classify.py \
 		normal:$< \
@@ -125,7 +125,7 @@ museq/vcf/HCC1395_exome_tumour_normal.vcf : bam/HCC1395_exome_normal.sort.markdu
 		-o $@
 
 # Run MutationSeq on Sampled Exome
-museq/vcf/HCC1395_exome_tumour_normal_17.vcf : bam/HCC1395_exome_normal.sort.markdup.17.7MB-8MB.bam bam/HCC1395_exome_tumour.sort.markdup.17.7MB-8MB.bam
+museq/results/HCC1395_exome_tumour_normal_17.vcf : bam/HCC1395_exome_normal.sort.markdup.17.7MB-8MB.bam bam/HCC1395_exome_tumour.sort.markdup.17.7MB-8MB.bam
 	mkdir -p $(@D); \
 	python $(MUSEQ_PATH)/classify.py \
 		normal:$< \
@@ -135,14 +135,7 @@ museq/vcf/HCC1395_exome_tumour_normal_17.vcf : bam/HCC1395_exome_normal.sort.mar
 		-c $(MUSEQ_PATH)/metadata.config \
 		-o $@
 
-strelka/HCC1395_exome_tumour_normal_17/results/passed.somatic.snvs.vcf : bam/HCC1395_exome_normal.sort.markdup.17.7MB-8MB.bam bam/HCC1395_exome_tumour.sort.markdup.17.7MB-8MB.bam
-	$(STRELKA_PATH)/configureStrelkaWorkflow.pl \
-    --normal $< \
-    --tumor $(word 2,$^) \
-    --ref refs/GRCh37-lite.fa \
-    --config strelka/config/strelka_config_bwa_default.ini \
-    --output-dir strelka/HCC1395_exome_tumour_normal_17
-
+# Run Strelka on Full Exome
 strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.vcf : bam/HCC1395_exome_normal.sort.markdup.bam bam/HCC1395_exome_tumour.sort.markdup.bam
 	$(STRELKA_PATH)/configureStrelkaWorkflow.pl \
     --normal $< \
@@ -152,12 +145,27 @@ strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.vcf : bam/HCC139
     --output-dir strelka/HCC1395_exome_tumour_normal && \
 	make -C strelka/HCC1395_exome_tumour_normal
 
+# Run Strelka on Sampled Exome
+strelka/HCC1395_exome_tumour_normal_17/results/passed.somatic.snvs.vcf : bam/HCC1395_exome_normal.sort.markdup.17.7MB-8MB.bam bam/HCC1395_exome_tumour.sort.markdup.17.7MB-8MB.bam
+	$(STRELKA_PATH)/configureStrelkaWorkflow.pl \
+    --normal $< \
+    --tumor $(word 2,$^) \
+    --ref refs/GRCh37-lite.fa \
+    --config strelka/config/strelka_config_bwa_default.ini \
+    --output-dir strelka/HCC1395_exome_tumour_normal_17 && \
+	make -C strelka/HCC1395_exome_tumour_normal_17
+
 #----------
 # Annotating Variants
 #----------
+snpeff.vcf : \
+	museq/results/HCC1395_exome_tumour_normal.snpeff.vcf \
+	museq/results/HCC1395_exome_tumour_normal_17.snpeff.vcf \
+	strelka/HCC1395_exome_tumour_normal_17/results/passed.somatic.snvs.snpeff.vcf \
+	strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.snpeff.vcf
 
-# Annotate Strelka Results
-strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.snpeff.vcf : strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.vcf
+# Annotate VCF 
+%.snpeff.vcf : %.vcf
 	java -Xmx4G -jar $(SNPEFF_PATH)/snpEff.jar \
 		-canon \
 		-no-downstream \
@@ -167,39 +175,22 @@ strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.snpeff.vcf : str
 		-s $(basename $@).summary.html \
 		$< > $@
 
-# Convert Strelka VCF to Table
-STRELKA_VCF_COLS = CHROM \
-									 POS \
-									 ID \
-									 REF \
-									 ALT \
-									 QUAL \
-									 FILTER \
-									 QSS \
-									 TQSS \
-									 NT \
-									 QSS_NT \
-									 TQSS_NT \
-									 SGT \
-									 SOMATIC
+#----------
+# Converting VCF to Table
+#----------
+snpeff.tsv : \
+	museq/results/HCC1395_exome_tumour_normal_17.snpeff.tsv \
+	strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.snpeff.tsv 
 
-SNPEFF_EFF_COLS = GEN[0].DP \
-									GEN[1].DP \
-									GEN[0].FDP \
-									GEN[1].FDP \
-									GEN[0].SDP \
-									GEN[1].SDP \
-									GEN[0].SUBDP \
-									GEN[1].SUBDP \
-									GEN[0].AU \
-									GEN[1].AU \
-									GEN[0].CU \
-									GEN[1].CU \
-									GEN[0].GU \
-									GEN[1].GU \
-									GEN[0].TU \
-									GEN[1].TU
-									 
+VCF_COLS = CHROM \
+					 POS \
+					 ID \
+					 REF \
+					 ALT \
+					 QUAL \
+					 FILTER
+
+								 
 SNPEFF_ANN_COLS = ANN[*].ALLELE \
 									ANN[*].EFFECT \
 									ANN[*].IMPACT \
@@ -220,16 +211,63 @@ SNPEFF_ANN_COLS = ANN[*].ALLELE \
 									ANN[*].DISTANCE \
 									ANN[*].ERRORS
 
+# Convert MutationSeq VCF to Table
+MUSEQ_VCF_COLS = $(VCF_COLS) \
+								 PR \
+								 TR \
+								 TA \
+								 NR \
+								 NA \
+								 TC \
+								 NI \
+								 ND \
+								 $(SNPEFF_ANN_COLS)
+
+# Convert Strelka VCF to Table
+STRELKA_VCF_COLS = $(VCF_COLS) \
+									 QSS \
+									 TQSS \
+									 NT \
+									 QSS_NT \
+									 TQSS_NT \
+									 SGT \
+									 SOMATIC \
+									 GEN[0].DP \
+									 GEN[1].DP \
+									 GEN[0].FDP \
+									 GEN[1].FDP \
+									 GEN[0].SDP \
+									 GEN[1].SDP \
+									 GEN[0].SUBDP \
+									 GEN[1].SUBDP \
+									 GEN[0].AU \
+									 GEN[1].AU \
+									 GEN[0].CU \
+									 GEN[1].CU \
+									 GEN[0].GU \
+									 GEN[1].GU \
+									 GEN[0].TU \
+									 GEN[1].TU \
+									 $(SNPEFF_ANN_COLS)
+
 # -e is the empty field value
 # -s multiple value separator
 # See http://snpeff.sourceforge.net/SnpSift.html#Extract for more details.
-strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.snpeff.tsv : strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.snpeff.vcf 
+strelka/%.snpeff.tsv : strelka/%.snpeff.vcf
 	java -jar $(SNPEFF_PATH)/SnpSift.jar \
 		extractFields \
 		-e "."  \
 		-s "," \
-		$< $(STRELKA_VCF_COLS) $(SNPEFF_EFF_COLS) $(SNPEFF_ANN_COLS) \
-		> $@
+		$< $(STRELKA_VCF_COLS) \
+		> $@.tmp && mv $@.tmp $@
+
+museq/%.snpeff.tsv : museq/%.snpeff.vcf
+	java -jar $(SNPEFF_PATH)/SnpSift.jar \
+		extractFields \
+		-e "."  \
+		-s "," \
+		$< $(MUSEQ_VCF_COLS) \
+		> $@.tmp && mv $@.tmp $@
 
 #----------
 # Run Pipeline
