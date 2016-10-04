@@ -177,9 +177,7 @@ bwa sampe refs/GRCh37-lite.fa \
 
 This would give us the full tumour and normal exome of the HCC1395 cell-line. 
 
-### Post-Processing the Alignments
-
-For this workshop, we will be working with only a 1 MB window of chromosome 17. These bam files are in this repo:
+#### Post-Processing the Alignments
 
 * `bam/HCC1395_exome_normal.sort.markdup.17.7MB-8MB.bam`
 * `bam/HCC1395_exome_tumour.sort.markdup.17.7MB-8MB.bam`
@@ -203,6 +201,10 @@ picard MarkDuplicates \
   M=bam/markdup_stats/HCC1395_exome_normal_marked_dup_metrics.txt \
   VALIDATION_STRINGENCY=LENIENT 
 ```
+
+### Generating the Bams Used for this Workshop
+
+For this workshop, we will be working with only a 1 MB window of chromosome 17. These bam files are in this repo:
 
 And then finally, we filter for the region of interest:
 
