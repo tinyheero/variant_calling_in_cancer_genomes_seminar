@@ -4,7 +4,7 @@
 * Time: 12-1pm
 * Location: Dorothy Lam Boardroom, British Columbia Cancer Research Centre, Vancouver, BC, Canada.
 
-This repository provides instructions on how to perform variant calling in cancer genome data. Specifically, the dataset is a matching tumor and normal exome from a breast cancer cell-line (HCC1395). The data is available from https://github.com/genome/gms/wiki/HCC1395-WGS-Exome-RNA-Seq-Data. 
+This repository provides instructions on how to perform variant calling in cancer genome data. Specifically, the dataset is a matching tumour and normal exome from a breast cancer cell-line (HCC1395). The data is available from https://github.com/genome/gms/wiki/HCC1395-WGS-Exome-RNA-Seq-Data. 
 
 ## Contact
 
@@ -23,6 +23,7 @@ Feel free to contact me for help regarding the content in this workshop:
     + [Getting the Full Exome Data](#getting-the-full-exome-data)
         - [Bam to Fastq Conversion](#bam-to-fastq-conversion)
         - [Sequence Alignment using BWA](#sequence-alignment-using-bwa)
+        - [Post-Processing the Alignments](#post-processing-the-alignments)
     + [Installing MutationSeq](#installing-mutationseq)
     + [Installing Strelka](#installing-strelka)
     + [Installing SnpEff](#installing-snpeff)
@@ -86,12 +87,12 @@ wget http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome/
 
 > You can skip this section if you are content with working with the bam files that are in the repo. 
 
-The original full exome data can be found https://github.com/genome/gms/wiki/HCC1395-WGS-Exome-RNA-Seq-Data. The repo contains in the `bam` folder two smaller tumor and normal bam files where only a 1 MB region on chromosome 17 is represented. This was done to file size issues. If you are interested in working with the whole exome data set, then you can follow these instructions:
+The original full exome data can be found https://github.com/genome/gms/wiki/HCC1395-WGS-Exome-RNA-Seq-Data. The repo contains in the `bam` folder two smaller tumour and normal bam files where only a 1 MB region on chromosome 17 is represented. This was done to file size issues. If you are interested in working with the whole exome data set, then you can follow these instructions:
 
 ```{bash}
 cd bam
 wget https://xfer.genome.wustl.edu/gxfer1/project/gms/testdata/bams/hcc1395/gerald_C1TD1ACXX_7_CGATGT.bam # normal exome
-wget https://xfer.genome.wustl.edu/gxfer1/project/gms/testdata/bams/hcc1395/gerald_C1TD1ACXX_7_ATCACG.bam # tumor exome
+wget https://xfer.genome.wustl.edu/gxfer1/project/gms/testdata/bams/hcc1395/gerald_C1TD1ACXX_7_ATCACG.bam # tumour exome
 ```
 
 Once these bam files have been downloaded, you will need to extract them as fastq files. 
@@ -115,7 +116,7 @@ picard SamToFastq \
   SECOND_END_FASTQ=fastq/gerald_C1TD1ACXX_7_CGATGT_R2.fastq
 ```
 
-Now for the tumor exome:
+Now for the tumour exome:
 
 ```{bash}
 picard SamToFastq \
@@ -157,6 +158,59 @@ bwa sampe refs/GRCh37-lite.fa \
   fastq/gerald_C1TD1ACXX_7_CGATGT_R2.fastq | 
   samtools view -bh > HCC1395_exome_normal.bam
 ```
+
+Now for the the tumour exome:
+
+```
+# bwa aln
+bwa aln refs/GRCh37-lite.fa fastq/gerald_C1TD1ACXX_7_ATCACG_R1.fastq > sai/gerald_C1TD1ACXX_7_ATCACG_R1.sai
+bwa aln refs/GRCh37-lite.fa fastq/gerald_C1TD1ACXX_7_ATCACG_R2.fastq > sai/gerald_C1TD1ACXX_7_ATCACG_R2.sai
+
+# bwa sampe
+bwa sampe refs/GRCh37-lite.fa \
+  sai/gerald_C1TD1ACXX_7_ATCACG_R1.sai \
+  sai/gerald_C1TD1ACXX_7_ATCACG_R2.sai \
+  fastq/gerald_C1TD1ACXX_7_ATCACG_R1.fastq \
+  fastq/gerald_C1TD1ACXX_7_ATCACG_R2.fastq | 
+  samtools view -bh > HCC1395_exome_tumour.bam
+```
+
+This would give us the full tumour and normal exome of the HCC1395 cell-line. 
+
+### Post-Processing the Alignments
+
+For this workshop, we will be working with only a 1 MB window of chromosome 17. These bam files are in this repo:
+
+* `bam/HCC1395_exome_normal.sort.markdup.17.7MB-8MB.bam`
+* `bam/HCC1395_exome_tumour.sort.markdup.17.7MB-8MB.bam`
+
+These bam files were generated with the following commands. First we sort the samples:
+
+```{bash}
+picard SortSam \
+  I=bam/HCC1395_exome_normal.bam \
+  O=bam/HCC1395_exome_normal.sort.bam \
+  SORT_ORDER=coordinate \
+  VALIDATION_STRINGENCY=LENIENT 
+```
+
+Then we mark for PCR duplicates:
+
+```
+picard MarkDuplicates \
+  I=bam/HCC1395_exome_normal.sort.bam \
+  O=bam/HCC1395_exome_normal.sort.markdup.bam \
+  M=bam/markdup_stats/HCC1395_exome_normal_marked_dup_metrics.txt \
+  VALIDATION_STRINGENCY=LENIENT 
+```
+
+And then finally, we filter for the region of interest:
+
+```{bash}
+samtools view -b bam/HCC1395_exome_normal.sort.markdup.bam 17:7000000-8000000 > bam/HCC1395_exome_normal.sort.markdup.17.7MB-8MB.bam
+```
+
+These commands refer to the normal sample, but are directly applicable to the tumor sample.
 
 ### Installing MutationSeq
 
