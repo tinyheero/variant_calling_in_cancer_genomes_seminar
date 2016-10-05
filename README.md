@@ -464,8 +464,8 @@ Note that the commands are different because of the different output fields that
 
 The final step is often the post-processing of the results in a data analysis language. In this workshop, we will use the data analysis language R for our post-processing. The files we will be post-processing are in this repo:
 
-* `strelka/HCC1395.strelka.full.txt`
-* `museq/HCC1395.museq.full.txt`
+* `strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.snpeff.tsv`
+* `museq/results/HCC1395_exome_tumour_normal.snpeff.tsv`
 
 These are the Strelka and MutationSeq runs on the full exome data as opposed to the subset of the exome which are what the bam files in the repository are. The full exome data though is processed through the same pipeline though.
 
@@ -478,13 +478,3 @@ A rmarkdown file (`analyze_snv_results.Rmd`) has been provided that provides the
 * stringr (v0.6.2)
 
 Now when you open the `analyze_snv_results.Rmd` file in Rstudio, you should be able to press the "Knit HTML") button and it should render the rmarkdown file into a html page.
-
-## Pipeline
-
-All of these steps have been packaged into a Makefile pipeline that is in this github repo. You just need to complete the "Setup" section and then you should be able to just run:
-
-```
-make variant_call
-```
-
-And this will perform the variant calling and annotation steps for you.
