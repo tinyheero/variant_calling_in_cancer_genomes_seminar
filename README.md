@@ -8,6 +8,13 @@
 
 This repository provides instructions on how to perform variant calling in cancer genome data. Specifically, the dataset is a matching tumour and normal exome from a breast cancer cell-line (HCC1395). The data is available from https://github.com/genome/gms/wiki/HCC1395-WGS-Exome-RNA-Seq-Data. 
 
+We will be performing somatic single point mutation calling on a matchin tumour-normal exome using two bioinformatics tools:
+
+* [MutationSeq](https://www.ncbi.nlm.nih.gov/pubmed/22084253)
+* [Strelka](https://www.ncbi.nlm.nih.gov/pubmed/22581179)
+
+And then annotating the variants using [SnpEff](https://www.ncbi.nlm.nih.gov/pubmed/22728672) and then finally analyzing the results using R.
+
 ## Contact
 
 Feel free to contact me for help regarding the content in this workshop:
