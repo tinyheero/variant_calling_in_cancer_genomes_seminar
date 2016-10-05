@@ -1,4 +1,4 @@
-# Variant Calling in Cancer Genomes Seminar
+# Variant Calling in Cancer Genomes
 
 > The material in this workshop was originally from the Module 6 - Somatic Mutations of the [Canadian Bioinformatics Workshop - Bioinformatics for Cancer Genomics](http://bioinformatics-ca.github.io/bioinformatics_for_cancer_genomics_2016).
 
