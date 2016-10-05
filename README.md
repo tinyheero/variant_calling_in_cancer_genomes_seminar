@@ -1,10 +1,19 @@
 # Variant Calling in Cancer Genomes Seminar
 
+> The material in this workshop was originally from the Module 6 - Somatic Mutations of the [Canadian Bioinformatics Workshop - Bioinformatics for Cancer Genomics](http://bioinformatics-ca.github.io/bioinformatics_for_cancer_genomics_2016).
+
 * Date: Sept 27, 2016
 * Time: 12-1pm
 * Location: Dorothy Lam Boardroom, British Columbia Cancer Research Centre, Vancouver, BC, Canada.
 
-This repository provides instructions on how to perform variant calling in cancer genome data. Specifically, the dataset is a matching tumor and normal exome from a breast cancer cell-line (HCC1395). The data is available from https://github.com/genome/gms/wiki/HCC1395-WGS-Exome-RNA-Seq-Data. 
+This repository provides instructions on how to perform variant calling in cancer genome data. Specifically, the dataset is a matching tumour and normal exome from a breast cancer cell-line (HCC1395). The data is available from https://github.com/genome/gms/wiki/HCC1395-WGS-Exome-RNA-Seq-Data. 
+
+We will be performing somatic single point mutation calling on a matchin tumour-normal exome using two bioinformatics tools:
+
+* [MutationSeq](https://www.ncbi.nlm.nih.gov/pubmed/22084253)
+* [Strelka](https://www.ncbi.nlm.nih.gov/pubmed/22581179)
+
+And then annotating the variants using [SnpEff](https://www.ncbi.nlm.nih.gov/pubmed/22728672) and then finally analyzing the results using R.
 
 ## Contact
 
@@ -23,6 +32,8 @@ Feel free to contact me for help regarding the content in this workshop:
     + [Getting the Full Exome Data](#getting-the-full-exome-data)
         - [Bam to Fastq Conversion](#bam-to-fastq-conversion)
         - [Sequence Alignment using BWA](#sequence-alignment-using-bwa)
+        - [Post-Processing the Alignments](#post-processing-the-alignments)
+        - [Generating the Bams used for this Workshop](#generating-the-bams-used-for-this-workshop)
     + [Installing MutationSeq](#installing-mutationseq)
     + [Installing Strelka](#installing-strelka)
     + [Installing SnpEff](#installing-snpeff)
@@ -86,12 +97,12 @@ wget http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome/
 
 > You can skip this section if you are content with working with the bam files that are in the repo. 
 
-The original full exome data can be found https://github.com/genome/gms/wiki/HCC1395-WGS-Exome-RNA-Seq-Data. The repo contains in the `bam` folder two smaller tumor and normal bam files where only a 1 MB region on chromosome 17 is represented. This was done to file size issues. If you are interested in working with the whole exome data set, then you can follow these instructions:
+The original full exome data can be found https://github.com/genome/gms/wiki/HCC1395-WGS-Exome-RNA-Seq-Data. The repo contains in the `bam` folder two smaller tumour and normal bam files where only a 1 MB region on chromosome 17 is represented. This was done due to file size constraints that github imposes. If you are interested in working with the whole exome data set, then you can follow these instructions:
 
 ```{bash}
 cd bam
 wget https://xfer.genome.wustl.edu/gxfer1/project/gms/testdata/bams/hcc1395/gerald_C1TD1ACXX_7_CGATGT.bam # normal exome
-wget https://xfer.genome.wustl.edu/gxfer1/project/gms/testdata/bams/hcc1395/gerald_C1TD1ACXX_7_ATCACG.bam # tumor exome
+wget https://xfer.genome.wustl.edu/gxfer1/project/gms/testdata/bams/hcc1395/gerald_C1TD1ACXX_7_ATCACG.bam # tumour exome
 ```
 
 Once these bam files have been downloaded, you will need to extract them as fastq files. 
@@ -115,7 +126,7 @@ picard SamToFastq \
   SECOND_END_FASTQ=fastq/gerald_C1TD1ACXX_7_CGATGT_R2.fastq
 ```
 
-Now for the tumor exome:
+Now for the tumour exome:
 
 ```{bash}
 picard SamToFastq \
@@ -157,6 +168,61 @@ bwa sampe refs/GRCh37-lite.fa \
   fastq/gerald_C1TD1ACXX_7_CGATGT_R2.fastq | 
   samtools view -bh > HCC1395_exome_normal.bam
 ```
+
+Now for the the tumour exome:
+
+```
+# bwa aln
+bwa aln refs/GRCh37-lite.fa fastq/gerald_C1TD1ACXX_7_ATCACG_R1.fastq > sai/gerald_C1TD1ACXX_7_ATCACG_R1.sai
+bwa aln refs/GRCh37-lite.fa fastq/gerald_C1TD1ACXX_7_ATCACG_R2.fastq > sai/gerald_C1TD1ACXX_7_ATCACG_R2.sai
+
+# bwa sampe
+bwa sampe refs/GRCh37-lite.fa \
+  sai/gerald_C1TD1ACXX_7_ATCACG_R1.sai \
+  sai/gerald_C1TD1ACXX_7_ATCACG_R2.sai \
+  fastq/gerald_C1TD1ACXX_7_ATCACG_R1.fastq \
+  fastq/gerald_C1TD1ACXX_7_ATCACG_R2.fastq | 
+  samtools view -bh > HCC1395_exome_tumour.bam
+```
+
+This would give us the full tumour and normal exome of the HCC1395 cell-line. 
+
+#### Post-Processing the Alignments
+
+Some post-processing of the bam files is then performed. For these exomes, we first perform a coordinate sort:
+
+```{bash}
+picard SortSam \
+  I=bam/HCC1395_exome_normal.bam \
+  O=bam/HCC1395_exome_normal.sort.bam \
+  SORT_ORDER=coordinate \
+  VALIDATION_STRINGENCY=LENIENT 
+```
+
+Then we mark for PCR duplicates:
+
+```
+picard MarkDuplicates \
+  I=bam/HCC1395_exome_normal.sort.bam \
+  O=bam/HCC1395_exome_normal.sort.markdup.bam \
+  M=bam/markdup_stats/HCC1395_exome_normal_marked_dup_metrics.txt \
+  VALIDATION_STRINGENCY=LENIENT 
+```
+
+### Generating the Bams used for this Workshop
+
+For this workshop, we will be working with only a 1 MB window of chromosome 17. These bam files are in this repo:
+
+* `bam/HCC1395_exome_normal.sort.markdup.17.7MB-8MB.bam`
+* `bam/HCC1395_exome_tumour.sort.markdup.17.7MB-8MB.bam`
+
+So you don't need to generate these bams. But if you are interested, you can generate these filtered bams by using the following command:
+
+```{bash}
+samtools view -b bam/HCC1395_exome_normal.sort.markdup.bam 17:7000000-8000000 > bam/HCC1395_exome_normal.sort.markdup.17.7MB-8MB.bam
+```
+
+These commands refer to the normal sample, but are directly applicable to the tumor sample.
 
 ### Installing MutationSeq
 
@@ -292,14 +358,14 @@ java -Xmx4G -jar $(HOME)/usr/snpeff/4.3/snpEff.jar \
 ### Using MutationSeq
 
 ```
-mkdir -p museq/vcf; \
+mkdir -p museq/results; \
 python $(HOME)/usr/museq/4.3.8/museq/classify.py \
   normal:bam/HCC1395_exome_normal.sort.markdup.17.7MB-8MB.bam \
   tumour:bam/HCC1395_exome_tumour.sort.markdup.17.7MB-8MB.bam \
   reference:refs/GRCh37-lite.fa \
   model:$(HOME)/museq/4.3.8/museq/models_anaconda/model_v4.1.2_anaconda_sk_0.13.1.npz \
   -c $(HOME)/usr/museq/4.3.8/museq/metadata.config \
-  -o museq/vcf/HCC1395_exome_tumour_normal_17.vcf
+  -o museq/results/HCC1395_exome_tumour_normal_17.vcf
 ```
 
 ### Using Strelka
@@ -340,9 +406,9 @@ Once we have the vcf files from MutationSeq and Strelka, we can use the followin
 java -Xmx4G -jar $(HOME)/usr/snpeff/4.3/snpEff.jar \
   -canon \
   GRCh37.75 \
-  -s museq/vcf/HCC1395_exome_tumour_normal.snpeff.summary.html \
-  museq/vcf/HCC1395_exome_tumour_normal_17.vcf \
-  > museq/vcf/HCC1395_exome_tumour_normal.snpeff.vcf
+  -s museq/results/HCC1395_exome_tumour_normal.snpeff.summary.html \
+  museq/results/HCC1395_exome_tumour_normal_17.vcf \
+  > museq/results/HCC1395_exome_tumour_normal.snpeff.vcf
 
 # Annotating Strelka Vcf
 java -Xmx4G -jar $(HOME)/usr/snpeff/4.3/snpEff.jar \
@@ -357,9 +423,25 @@ java -Xmx4G -jar $(HOME)/usr/snpeff/4.3/snpEff.jar \
 
 One standard step that is often done is converting the VCF file into a tabular format that can be easily loaded into other software (e.g. R, python) for additional analysis or easier distribution (e.g. excel) for collaborators. 
 
-The following command demonstrates how one can convert the Strelka VCF output file that has been annotated with SnpEff into a tabular format.
+The following command demonstrates how one can convert the MutationSeq VCF output file that has been annotated with SnpEff into a tabular format.
 
+```{bash}
+java -jar /home/fong/usr/snpeff/4.3/SnpSift.jar \
+	extractFields \
+	-e "."  \
+	-s "," \
+	museq/results/HCC1395_exome_tumour_normal_17.snpeff.vcf \
+  CHROM POS ID REF ALT QUAL FILTER PR TR TA NR NA TC NI ND ANN[*].ALLELE \
+  ANN[*].EFFECT ANN[*].IMPACT ANN[*].GENE ANN[*].GENEID ANN[*].FEATURE \
+  ANN[*].FEATUREID ANN[*].BIOTYPE ANN[*].RANK ANN[*].HGVS_C ANN[*].HGVS_P \
+  ANN[*].CDNA_POS ANN[*].CDNA_LEN ANN[*].CDS_POS ANN[*].CDS_LEN ANN[*].AA_POS \
+  ANN[*].AA_LEN ANN[*].DISTANCE ANN[*].ERRORS \
+	> museq/results/HCC1395_exome_tumour_normal_17.snpeff.tsv.tmp 
 ```
+
+And this is the command for Strelka output.
+
+```{bash}
 java -jar $(HOME)/usr/snpeff/4.3/SnpSift.jar \
   extractFields \
   -e "."  \
@@ -375,6 +457,8 @@ java -jar $(HOME)/usr/snpeff/4.3/SnpSift.jar \
   ANN[*].AA_LEN ANN[*].DISTANCE ANN[*].ERRORS \
   > strelka/HCC1395_exome_tumour_normal_17/results/passed.somatic.snvs.snpeff.tsv
 ```
+
+Note that the commands are different because of the different output fields that MutationSeq and Strelka use. If you use a different mutation caller, you will have to adapt your command to the mutation caller.
 
 ## Post-Processing in R
 
