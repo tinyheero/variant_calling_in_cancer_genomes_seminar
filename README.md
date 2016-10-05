@@ -43,7 +43,6 @@ Feel free to contact me for help regarding the content in this workshop:
 * [Annotating Variants](#annotating-variants)
 * [Converting VCF to Table](#converting-vcf-to-table)
 * [Post-Processing in R](#post-processing-in-r)
-* [Pipeline](#pipeline)
 
 ## Setup
 
@@ -357,6 +356,8 @@ java -Xmx4G -jar $(HOME)/usr/snpeff/4.3/snpEff.jar \
 
 ### Using MutationSeq
 
+To call variants using MutationSeq, we use the following command:
+
 ```
 mkdir -p museq/results; \
 python $(HOME)/usr/museq/4.3.8/museq/classify.py \
@@ -368,9 +369,11 @@ python $(HOME)/usr/museq/4.3.8/museq/classify.py \
   -o museq/results/HCC1395_exome_tumour_normal_17.vcf
 ```
 
+Notice how for the `model` parameter, we used the `$(HOME)/museq/4.3.8/museq/models_anaconda/model_v4.1.2_anaconda_sk_0.13.1.npz`. As mentioned in the [Installing MutationSeq](#installing-mutationseq) section, this model specifically works with conda and the scikit-learn library (v0.13.1) which is how we installed MutationSeq in the workshop. If you are not using conda, then you will have to use the model version which is compatible with the scikit-learn library you have installed for your python.
+
 ### Using Strelka
 
-To call variants in Strelka, we use the following command:
+To call variants using Strelka, we use the following command:
 
 ```
 $(HOME)/usr/strelka/1.0.15/bin/configureStrelkaWorkflow.pl \
