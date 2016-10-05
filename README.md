@@ -1,5 +1,7 @@
 # Variant Calling in Cancer Genomes Seminar
 
+> The material in this workshop was originally from the Module 6 - Somatic Mutations of the [Canadian Bioinformatics Workshop - Bioinformatics for Cancer Genomics](http://bioinformatics-ca.github.io/bioinformatics_for_cancer_genomics_2016).
+
 * Date: Sept 27, 2016
 * Time: 12-1pm
 * Location: Dorothy Lam Boardroom, British Columbia Cancer Research Centre, Vancouver, BC, Canada.
@@ -179,10 +181,7 @@ This would give us the full tumour and normal exome of the HCC1395 cell-line.
 
 #### Post-Processing the Alignments
 
-* `bam/HCC1395_exome_normal.sort.markdup.17.7MB-8MB.bam`
-* `bam/HCC1395_exome_tumour.sort.markdup.17.7MB-8MB.bam`
-
-These bam files were generated with the following commands. First we sort the samples:
+Some post-processing of the bam files is often needed. For these exomes, we will perform a coordinate sort:
 
 ```{bash}
 picard SortSam \
@@ -206,7 +205,10 @@ picard MarkDuplicates \
 
 For this workshop, we will be working with only a 1 MB window of chromosome 17. These bam files are in this repo:
 
-And then finally, we filter for the region of interest:
+* `bam/HCC1395_exome_normal.sort.markdup.17.7MB-8MB.bam`
+* `bam/HCC1395_exome_tumour.sort.markdup.17.7MB-8MB.bam`
+
+So you don't need to generate these bams. But if you are interested, you can generate these filtered bams by using the following command:
 
 ```{bash}
 samtools view -b bam/HCC1395_exome_normal.sort.markdup.bam 17:7000000-8000000 > bam/HCC1395_exome_normal.sort.markdup.17.7MB-8MB.bam
