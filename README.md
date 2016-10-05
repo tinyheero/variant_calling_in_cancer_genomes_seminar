@@ -423,9 +423,25 @@ java -Xmx4G -jar $(HOME)/usr/snpeff/4.3/snpEff.jar \
 
 One standard step that is often done is converting the VCF file into a tabular format that can be easily loaded into other software (e.g. R, python) for additional analysis or easier distribution (e.g. excel) for collaborators. 
 
-The following command demonstrates how one can convert the Strelka VCF output file that has been annotated with SnpEff into a tabular format.
+The following command demonstrates how one can convert the MutationSeq VCF output file that has been annotated with SnpEff into a tabular format.
 
+```{bash}
+java -jar /home/fong/usr/snpeff/4.3/SnpSift.jar \
+	extractFields \
+	-e "."  \
+	-s "," \
+	museq/results/HCC1395_exome_tumour_normal_17.snpeff.vcf \
+  CHROM POS ID REF ALT QUAL FILTER PR TR TA NR NA TC NI ND ANN[*].ALLELE \
+  ANN[*].EFFECT ANN[*].IMPACT ANN[*].GENE ANN[*].GENEID ANN[*].FEATURE \
+  ANN[*].FEATUREID ANN[*].BIOTYPE ANN[*].RANK ANN[*].HGVS_C ANN[*].HGVS_P \
+  ANN[*].CDNA_POS ANN[*].CDNA_LEN ANN[*].CDS_POS ANN[*].CDS_LEN ANN[*].AA_POS \
+  ANN[*].AA_LEN ANN[*].DISTANCE ANN[*].ERRORS \
+	> museq/results/HCC1395_exome_tumour_normal_17.snpeff.tsv.tmp 
 ```
+
+And this is the command for Strelka output.
+
+```{bash}
 java -jar $(HOME)/usr/snpeff/4.3/SnpSift.jar \
   extractFields \
   -e "."  \
@@ -441,6 +457,8 @@ java -jar $(HOME)/usr/snpeff/4.3/SnpSift.jar \
   ANN[*].AA_LEN ANN[*].DISTANCE ANN[*].ERRORS \
   > strelka/HCC1395_exome_tumour_normal_17/results/passed.somatic.snvs.snpeff.tsv
 ```
+
+Note that the commands are different because of the different output fields that MutationSeq and Strelka use. If you use a different mutation caller, you will have to adapt your command to the mutation caller.
 
 ## Post-Processing in R
 
