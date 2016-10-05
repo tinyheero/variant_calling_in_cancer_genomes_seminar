@@ -26,6 +26,7 @@ Feel free to contact me for help regarding the content in this workshop:
         - [Bam to Fastq Conversion](#bam-to-fastq-conversion)
         - [Sequence Alignment using BWA](#sequence-alignment-using-bwa)
         - [Post-Processing the Alignments](#post-processing-the-alignments)
+        - [Generating the Bams used for this Workshop](#generating-the-bams-used-for-this-workshop)
     + [Installing MutationSeq](#installing-mutationseq)
     + [Installing Strelka](#installing-strelka)
     + [Installing SnpEff](#installing-snpeff)
@@ -89,7 +90,7 @@ wget http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome/
 
 > You can skip this section if you are content with working with the bam files that are in the repo. 
 
-The original full exome data can be found https://github.com/genome/gms/wiki/HCC1395-WGS-Exome-RNA-Seq-Data. The repo contains in the `bam` folder two smaller tumour and normal bam files where only a 1 MB region on chromosome 17 is represented. This was done to file size issues. If you are interested in working with the whole exome data set, then you can follow these instructions:
+The original full exome data can be found https://github.com/genome/gms/wiki/HCC1395-WGS-Exome-RNA-Seq-Data. The repo contains in the `bam` folder two smaller tumour and normal bam files where only a 1 MB region on chromosome 17 is represented. This was done due to file size constraints that github imposes. If you are interested in working with the whole exome data set, then you can follow these instructions:
 
 ```{bash}
 cd bam
@@ -181,7 +182,7 @@ This would give us the full tumour and normal exome of the HCC1395 cell-line.
 
 #### Post-Processing the Alignments
 
-Some post-processing of the bam files is often needed. For these exomes, we will perform a coordinate sort:
+Some post-processing of the bam files is then performed. For these exomes, we first perform a coordinate sort:
 
 ```{bash}
 picard SortSam \
@@ -201,7 +202,7 @@ picard MarkDuplicates \
   VALIDATION_STRINGENCY=LENIENT 
 ```
 
-### Generating the Bams Used for this Workshop
+### Generating the Bams used for this Workshop
 
 For this workshop, we will be working with only a 1 MB window of chromosome 17. These bam files are in this repo:
 
@@ -350,14 +351,14 @@ java -Xmx4G -jar $(HOME)/usr/snpeff/4.3/snpEff.jar \
 ### Using MutationSeq
 
 ```
-mkdir -p museq/vcf; \
+mkdir -p museq/results; \
 python $(HOME)/usr/museq/4.3.8/museq/classify.py \
   normal:bam/HCC1395_exome_normal.sort.markdup.17.7MB-8MB.bam \
   tumour:bam/HCC1395_exome_tumour.sort.markdup.17.7MB-8MB.bam \
   reference:refs/GRCh37-lite.fa \
   model:$(HOME)/museq/4.3.8/museq/models_anaconda/model_v4.1.2_anaconda_sk_0.13.1.npz \
   -c $(HOME)/usr/museq/4.3.8/museq/metadata.config \
-  -o museq/vcf/HCC1395_exome_tumour_normal_17.vcf
+  -o museq/results/HCC1395_exome_tumour_normal_17.vcf
 ```
 
 ### Using Strelka
@@ -398,9 +399,9 @@ Once we have the vcf files from MutationSeq and Strelka, we can use the followin
 java -Xmx4G -jar $(HOME)/usr/snpeff/4.3/snpEff.jar \
   -canon \
   GRCh37.75 \
-  -s museq/vcf/HCC1395_exome_tumour_normal.snpeff.summary.html \
-  museq/vcf/HCC1395_exome_tumour_normal_17.vcf \
-  > museq/vcf/HCC1395_exome_tumour_normal.snpeff.vcf
+  -s museq/results/HCC1395_exome_tumour_normal.snpeff.summary.html \
+  museq/results/HCC1395_exome_tumour_normal_17.vcf \
+  > museq/results/HCC1395_exome_tumour_normal.snpeff.vcf
 
 # Annotating Strelka Vcf
 java -Xmx4G -jar $(HOME)/usr/snpeff/4.3/snpEff.jar \
