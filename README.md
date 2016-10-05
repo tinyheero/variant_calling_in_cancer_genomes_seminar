@@ -6,7 +6,7 @@
 * Time: 12-1pm
 * Location: Dorothy Lam Boardroom, British Columbia Cancer Research Centre, Vancouver, BC, Canada.
 
-This repository provides instructions on how to perform variant calling in cancer genome data. Specifically, the dataset is a matching tumour and normal exome from a breast cancer cell-line (HCC1395). The data is available from https://github.com/genome/gms/wiki/HCC1395-WGS-Exome-RNA-Seq-Data. 
+This repository provides instructions on how to perform variant calling in cancer genome data. Specifically, the dataset is a matching tumour and normal exome from a breast cancer cell-line (HCC1395). The data is available from https://github.com/genome/gms/wiki/HCC1395-WGS-Exome-RNA-Seq-Data.
 
 We will be performing somatic single point mutation calling on a matchin tumour-normal exome using two bioinformatics tools:
 
@@ -47,7 +47,7 @@ Feel free to contact me for help regarding the content in this workshop:
 
 ## Setup
 
-These instructions have been tested on a linux machine. 
+These instructions have been tested on a linux machine.
 
 ### Clone Repository
 
@@ -65,7 +65,7 @@ The repository provides the following files:
 
 ### Using Conda
 
-While not necessary, using conda for both installation and package management will make life easier and is recommended for this workshop. Conda is a package management system that is becoming popular in the field of bioinformatics for reproducible research. An increasing number of bioinformatics software are now being distributed through this system. 
+While not necessary, using conda for both installation and package management will make life easier and is recommended for this workshop. Conda is a package management system that is becoming popular in the field of bioinformatics for reproducible research. An increasing number of bioinformatics software are now being distributed through this system.
 
 For this workshop, installation of different tools will be done by conda (when possible). When the tools are not in conda, instructions on how to manually install the software will be provided. To install conda, we can get it through [miniconda](http://conda.pydata.org/miniconda.html). First download miniconda (for python 2.7) and then run:
 
@@ -80,7 +80,7 @@ which conda
 ~/miniconda2/bin/conda
 ```
 
-If you choose not to use conda to install the software needed for this workshop, then you will have to manually install it by yourself. 
+If you choose not to use conda to install the software needed for this workshop, then you will have to manually install it by yourself.
 
 ### Downloading Human Reference
 
@@ -95,7 +95,7 @@ wget http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome/
 
 ### Getting the Full Exome Data
 
-> You can skip this section if you are content with working with the bam files that are in the repo. 
+> You can skip this section if you are content with working with the bam files that are in the repo.
 
 The original full exome data can be found https://github.com/genome/gms/wiki/HCC1395-WGS-Exome-RNA-Seq-Data. The repo contains in the `bam` folder two smaller tumour and normal bam files where only a 1 MB region on chromosome 17 is represented. This was done due to file size constraints that github imposes. If you are interested in working with the whole exome data set, then you can follow these instructions:
 
@@ -105,7 +105,7 @@ wget https://xfer.genome.wustl.edu/gxfer1/project/gms/testdata/bams/hcc1395/gera
 wget https://xfer.genome.wustl.edu/gxfer1/project/gms/testdata/bams/hcc1395/gerald_C1TD1ACXX_7_ATCACG.bam # tumour exome
 ```
 
-Once these bam files have been downloaded, you will need to extract them as fastq files. 
+Once these bam files have been downloaded, you will need to extract them as fastq files.
 
 #### Bam to Fastq Conversion
 
@@ -427,16 +427,16 @@ The following command demonstrates how one can convert the MutationSeq VCF outpu
 
 ```{bash}
 java -jar /home/fong/usr/snpeff/4.3/SnpSift.jar \
-	extractFields \
-	-e "."  \
-	-s "," \
-	museq/results/HCC1395_exome_tumour_normal_17.snpeff.vcf \
+  extractFields \
+  -e "."  \
+  -s "," \
+  museq/results/HCC1395_exome_tumour_normal_17.snpeff.vcf \
   CHROM POS ID REF ALT QUAL FILTER PR TR TA NR NA TC NI ND ANN[*].ALLELE \
   ANN[*].EFFECT ANN[*].IMPACT ANN[*].GENE ANN[*].GENEID ANN[*].FEATURE \
   ANN[*].FEATUREID ANN[*].BIOTYPE ANN[*].RANK ANN[*].HGVS_C ANN[*].HGVS_P \
   ANN[*].CDNA_POS ANN[*].CDNA_LEN ANN[*].CDS_POS ANN[*].CDS_LEN ANN[*].AA_POS \
   ANN[*].AA_LEN ANN[*].DISTANCE ANN[*].ERRORS \
-	> museq/results/HCC1395_exome_tumour_normal_17.snpeff.tsv.tmp 
+  > museq/results/HCC1395_exome_tumour_normal_17.snpeff.tsv.tmp 
 ```
 
 And this is the command for Strelka output.
