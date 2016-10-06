@@ -15,6 +15,8 @@ We will be performing somatic single point mutation calling on a matchin tumour-
 
 And then annotating the variants using [SnpEff](https://www.ncbi.nlm.nih.gov/pubmed/22728672) and then finally analyzing the results using R.
 
+The corresponding presentation slides can also be found in this repository ([variant_calling_presentation.pdf](https://github.com/tinyheero/variant_calling_in_cancer_genomes_seminar/blob/master/variant_calling_presentation.pdf))
+
 ## Contact
 
 Feel free to contact me for help regarding the content in this workshop:
