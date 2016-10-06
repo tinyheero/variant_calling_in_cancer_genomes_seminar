@@ -2,7 +2,7 @@
 
 > The material in this workshop was originally from the Module 6 - Somatic Mutations of the [Canadian Bioinformatics Workshop - Bioinformatics for Cancer Genomics](http://bioinformatics-ca.github.io/bioinformatics_for_cancer_genomics_2016).
 
-![Bioinformatics.ca Cup](variant_calling_in_cancer_genomes_seminar/bioinformatics_cup.JPG)
+![Bioinformatics.ca Cup](https://github.com/tinyheero/variant_calling_in_cancer_genomes_seminar/blob/master/bioinformatics_cup.JPG)
 
 * Date: Sept 27, 2016
 * Time: 12-1pm
