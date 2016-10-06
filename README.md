@@ -480,4 +480,4 @@ A rmarkdown file (`analyze_snv_results.Rmd`) has been provided that provides the
 * dplyr (v0.5.0)
 * stringr (v0.6.2)
 
-Now when you open the `analyze_snv_results.Rmd` file in Rstudio, you should be able to press the "Knit HTML") button and it should render the rmarkdown file into a html page.
+Now when you open the `analyze_snv_results.Rmd` file in Rstudio, you should be able to press the "Knit HTML" button and it should render the rmarkdown file into a html page.

@@ -270,11 +270,6 @@ museq/%.snpeff.tsv : museq/%.snpeff.vcf
 		> $@.tmp && mv $@.tmp $@
 
 #----------
-# Run Pipeline
-#----------
-variant_call : strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.snpeff.tsv
-
-#----------
 # Knit Rmarkdown Page
 #----------
 %.html : %.Rmd
