@@ -30,7 +30,9 @@ library("stringr")
 Let's start by loading the Strelka results. Some pre-processing is done on the tabular results to make them easier to work with. See if you can understand what is happening:
 
 ```{r warning = FALSE}
-strelkaDt <- fread("strelka/HCC1395.strelka.full.txt", header = T)
+strelkaDt <- 
+  fread("strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.snpeff.tsv", 
+        header = T)
 
 # rename columns so easier to reference later on
 setnames(strelkaDt, "#CHROM", "CHROM")
@@ -167,7 +169,8 @@ strelkaDt.filtered %>%
 Let's analyze the MutationSeq results now. Load the MutationSeq predicted SNVs. These have been filtered for `PR > 0.85`.
 
 ```{r}
-museqDt <- fread("museq/HCC1395.museq.full.txt", header = TRUE)
+museqDt <- fread("museq/results/HCC1395_exome_tumour_normal.snpeff.tsv",
+                 header = TRUE)
 setnames(museqDt, "#CHROM", "CHROM")
 museqDt <- museqDt[, CHROM := factor(CHROM, levels = c(1:22, "X"))]
 museqDt <- museqDt %>%

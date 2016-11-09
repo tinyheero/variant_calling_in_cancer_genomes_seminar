@@ -1,12 +1,14 @@
-# Variant Calling in Cancer Genomes Seminar
+# Variant Calling in Cancer Genomes
 
 > The material in this workshop was originally from the Module 6 - Somatic Mutations of the [Canadian Bioinformatics Workshop - Bioinformatics for Cancer Genomics](http://bioinformatics-ca.github.io/bioinformatics_for_cancer_genomics_2016).
+
+![Bioinformatics.ca Cup](https://github.com/tinyheero/variant_calling_in_cancer_genomes_seminar/blob/master/bioinformatics_cup.JPG)
 
 * Date: Sept 27, 2016
 * Time: 12-1pm
 * Location: Dorothy Lam Boardroom, British Columbia Cancer Research Centre, Vancouver, BC, Canada.
 
-This repository provides instructions on how to perform variant calling in cancer genome data. Specifically, the dataset is a matching tumour and normal exome from a breast cancer cell-line (HCC1395). The data is available from https://github.com/genome/gms/wiki/HCC1395-WGS-Exome-RNA-Seq-Data. 
+This repository provides instructions on how to perform variant calling in cancer genome data. Specifically, the dataset is a matching tumour and normal exome from a breast cancer cell-line (HCC1395). The data is available from https://github.com/genome/gms/wiki/HCC1395-WGS-Exome-RNA-Seq-Data.
 
 We will be performing somatic single point mutation calling on a matchin tumour-normal exome using two bioinformatics tools:
 
@@ -14,6 +16,8 @@ We will be performing somatic single point mutation calling on a matchin tumour-
 * [Strelka](https://www.ncbi.nlm.nih.gov/pubmed/22581179)
 
 And then annotating the variants using [SnpEff](https://www.ncbi.nlm.nih.gov/pubmed/22728672) and then finally analyzing the results using R.
+
+The corresponding presentation slides can also be found in this repository - [variant_calling_presentation.pdf](https://github.com/tinyheero/variant_calling_in_cancer_genomes_seminar/blob/master/variant_calling_presentation.pdf)
 
 ## Contact
 
@@ -43,11 +47,10 @@ Feel free to contact me for help regarding the content in this workshop:
 * [Annotating Variants](#annotating-variants)
 * [Converting VCF to Table](#converting-vcf-to-table)
 * [Post-Processing in R](#post-processing-in-r)
-* [Pipeline](#pipeline)
 
 ## Setup
 
-These instructions have been tested on a linux machine. 
+These instructions have been tested on a linux machine.
 
 ### Clone Repository
 
@@ -65,7 +68,7 @@ The repository provides the following files:
 
 ### Using Conda
 
-While not necessary, using conda for both installation and package management will make life easier and is recommended for this workshop. Conda is a package management system that is becoming popular in the field of bioinformatics for reproducible research. An increasing number of bioinformatics software are now being distributed through this system. 
+While not necessary, using conda for both installation and package management will make life easier and is recommended for this workshop. Conda is a package management system that is becoming popular in the field of bioinformatics for reproducible research. An increasing number of bioinformatics software are now being distributed through this system.
 
 For this workshop, installation of different tools will be done by conda (when possible). When the tools are not in conda, instructions on how to manually install the software will be provided. To install conda, we can get it through [miniconda](http://conda.pydata.org/miniconda.html). First download miniconda (for python 2.7) and then run:
 
@@ -80,7 +83,7 @@ which conda
 ~/miniconda2/bin/conda
 ```
 
-If you choose not to use conda to install the software needed for this workshop, then you will have to manually install it by yourself. 
+If you choose not to use conda to install the software needed for this workshop, then you will have to manually install it by yourself.
 
 ### Downloading Human Reference
 
@@ -95,7 +98,7 @@ wget http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome/
 
 ### Getting the Full Exome Data
 
-> You can skip this section if you are content with working with the bam files that are in the repo. 
+> You can skip this section if you are content with working with the bam files that are in the repo.
 
 The original full exome data can be found https://github.com/genome/gms/wiki/HCC1395-WGS-Exome-RNA-Seq-Data. The repo contains in the `bam` folder two smaller tumour and normal bam files where only a 1 MB region on chromosome 17 is represented. This was done due to file size constraints that github imposes. If you are interested in working with the whole exome data set, then you can follow these instructions:
 
@@ -105,7 +108,7 @@ wget https://xfer.genome.wustl.edu/gxfer1/project/gms/testdata/bams/hcc1395/gera
 wget https://xfer.genome.wustl.edu/gxfer1/project/gms/testdata/bams/hcc1395/gerald_C1TD1ACXX_7_ATCACG.bam # tumour exome
 ```
 
-Once these bam files have been downloaded, you will need to extract them as fastq files. 
+Once these bam files have been downloaded, you will need to extract them as fastq files.
 
 #### Bam to Fastq Conversion
 
@@ -343,6 +346,8 @@ snpEff download GRCh37.75
 
 ### Using MutationSeq
 
+To call variants using MutationSeq, we use the following command:
+
 ```
 mkdir -p museq/results; \
 python $(HOME)/usr/museq/4.3.8/museq/classify.py \
@@ -354,9 +359,11 @@ python $(HOME)/usr/museq/4.3.8/museq/classify.py \
   -o museq/results/HCC1395_exome_tumour_normal_17.vcf
 ```
 
+Notice how for the `model` parameter, we used the `$(HOME)/museq/4.3.8/museq/models_anaconda/model_v4.1.2_anaconda_sk_0.13.1.npz`. As mentioned in the [Installing MutationSeq](#installing-mutationseq) section, this model specifically works with conda and the scikit-learn library (v0.13.1) which is how we installed MutationSeq in the workshop. If you are not using conda, then you will have to use the model version which is compatible with the scikit-learn library you have installed for your python.
+
 ### Using Strelka
 
-To call variants in Strelka, we use the following command:
+To call variants using Strelka, we use the following command:
 
 ```{bash}
 $(HOME)/usr/strelka/1.0.15/bin/configureStrelkaWorkflow.pl \
@@ -422,7 +429,7 @@ SnpSift \
   ANN[*].FEATUREID ANN[*].BIOTYPE ANN[*].RANK ANN[*].HGVS_C ANN[*].HGVS_P \
   ANN[*].CDNA_POS ANN[*].CDNA_LEN ANN[*].CDS_POS ANN[*].CDS_LEN ANN[*].AA_POS \
   ANN[*].AA_LEN ANN[*].DISTANCE ANN[*].ERRORS \
-	> museq/results/HCC1395_exome_tumour_normal_17.snpeff.tsv.tmp 
+  > museq/results/HCC1395_exome_tumour_normal_17.snpeff.tsv.tmp 
 ```
 
 And this is the command for Strelka output.
@@ -450,8 +457,8 @@ Note that the commands are different because of the different output fields that
 
 The final step is often the post-processing of the results in a data analysis language. In this workshop, we will use the data analysis language R for our post-processing. The files we will be post-processing are in this repo:
 
-* `strelka/HCC1395.strelka.full.txt`
-* `museq/HCC1395.museq.full.txt`
+* `strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.snpeff.tsv`
+* `museq/results/HCC1395_exome_tumour_normal.snpeff.tsv`
 
 These are the Strelka and MutationSeq runs on the full exome data as opposed to the subset of the exome which are what the bam files in the repository are. The full exome data though is processed through the same pipeline though.
 
@@ -463,14 +470,4 @@ A rmarkdown file (`analyze_snv_results.Rmd`) has been provided that provides the
 * dplyr (v0.5.0)
 * stringr (v0.6.2)
 
-Now when you open the `analyze_snv_results.Rmd` file in Rstudio, you should be able to press the "Knit HTML") button and it should render the rmarkdown file into a html page.
-
-## Pipeline
-
-All of these steps have been packaged into a Makefile pipeline that is in this github repo. You just need to complete the "Setup" section and then you should be able to just run:
-
-```
-make variant_call
-```
-
-And this will perform the variant calling and annotation steps for you.
+Now when you open the `analyze_snv_results.Rmd` file in Rstudio, you should be able to press the "Knit HTML" button and it should render the rmarkdown file into a html page.
