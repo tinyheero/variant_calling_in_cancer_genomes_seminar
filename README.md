@@ -40,7 +40,7 @@ Feel free to contact me for help regarding the content in this workshop:
         - [Generating the Bams used for this Workshop](#generating-the-bams-used-for-this-workshop)
     + [Installing MutationSeq](#installing-mutationseq)
     + [Installing Strelka](#installing-strelka)
-    + [Installing SnpEff](#installing-snpeff)
+    + [Installing SnpEff/SnpSift](#installing-snpeffsnpsift)
 * [Calling Variants](#calling-variants)
     + [Using MutationSeq](#using-mutationseq)
     + [Using Strelka](#using-strelka)
