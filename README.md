@@ -420,16 +420,16 @@ The following command demonstrates how one can convert the MutationSeq VCF outpu
 
 ```{bash}
 SnpSift \
-	extractFields \
-	-e "."  \
-	-s "," \
-	museq/results/HCC1395_exome_tumour_normal_17.snpeff.vcf \
+  extractFields \
+  -e "."  \
+  -s "," \
+  museq/results/HCC1395_exome_tumour_normal_17.snpeff.vcf \
   CHROM POS ID REF ALT QUAL FILTER PR TR TA NR NA TC NI ND ANN[*].ALLELE \
   ANN[*].EFFECT ANN[*].IMPACT ANN[*].GENE ANN[*].GENEID ANN[*].FEATURE \
   ANN[*].FEATUREID ANN[*].BIOTYPE ANN[*].RANK ANN[*].HGVS_C ANN[*].HGVS_P \
   ANN[*].CDNA_POS ANN[*].CDNA_LEN ANN[*].CDS_POS ANN[*].CDS_LEN ANN[*].AA_POS \
   ANN[*].AA_LEN ANN[*].DISTANCE ANN[*].ERRORS \
-  > museq/results/HCC1395_exome_tumour_normal_17.snpeff.tsv.tmp 
+  > museq/results/HCC1395_exome_tumour_normal_17.snpeff.tsv
 ```
 
 And this is the command for Strelka output.
