@@ -2,6 +2,8 @@
 
 > The material in this workshop was originally from the Module 6 - Somatic Mutations of the [Canadian Bioinformatics Workshop - Bioinformatics for Cancer Genomics](http://bioinformatics-ca.github.io/bioinformatics_for_cancer_genomics_2016).
 
+![Bioinformatics.ca Cup](https://github.com/tinyheero/variant_calling_in_cancer_genomes_seminar/blob/master/bioinformatics_cup.JPG)
+
 * Date: Sept 27, 2016
 * Time: 12-1pm
 * Location: Dorothy Lam Boardroom, British Columbia Cancer Research Centre, Vancouver, BC, Canada.
@@ -15,7 +17,7 @@ We will be performing somatic single point mutation calling on a matchin tumour-
 
 And then annotating the variants using [SnpEff](https://www.ncbi.nlm.nih.gov/pubmed/22728672) and then finally analyzing the results using R.
 
-The corresponding presentation slides can also be found in this repository ([variant_calling_presentation.pdf](variant_calling_in_cancer_genomes_seminar/variant_calling_presentation.pdf))
+The corresponding presentation slides can also be found in this repository - [variant_calling_presentation.pdf](https://github.com/tinyheero/variant_calling_in_cancer_genomes_seminar/blob/master/variant_calling_presentation.pdf)
 
 ## Contact
 
@@ -38,7 +40,7 @@ Feel free to contact me for help regarding the content in this workshop:
         - [Generating the Bams used for this Workshop](#generating-the-bams-used-for-this-workshop)
     + [Installing MutationSeq](#installing-mutationseq)
     + [Installing Strelka](#installing-strelka)
-    + [Installing SnpEff](#installing-snpeff)
+    + [Installing SnpEff/SnpSift](#installing-snpeffsnpsift)
 * [Calling Variants](#calling-variants)
     + [Using MutationSeq](#using-mutationseq)
     + [Using Strelka](#using-strelka)
@@ -324,35 +326,21 @@ isSkipDepthFilters = 1
 
 The `strelka/config/strelka_config_bwa_default.ini` in this repo is provided to demonstrate this. We will use this file for the workshop.
 
-### Installing SnpEff
+### Installing SnpEff/SnpSift
 
-SnpEff can be downloaded from https://sourceforge.net/projects/snpeff/files. For this workshop, we will use [version 4.2 of SnpEff](https://sourceforge.net/projects/snpeff/files/snpEff_v4_2_core.zip/download). Once you downloaded unzip the files to
-
-```
-unzip snpEff_v4_2_core.zip -d $(HOME)/usr/snpeff/4.3
-mv $(HOME)/usr/snpeff/4.3/snpEff/* $(HOME)/usr/snpeff/4.3 # for organization
-```
-
-You need to edit the `$(HOME)/usr/snpeff/4.3/snpEff.config` file to add the path where the SnpEff genome databases will be installed. So open this file in your favourite text editor (e.g. vim) and edit the data.dir line to indicate where you want your snpeff databases to be installed.
+SnpEff/SnpSift are used for annotating and post-processing VCF files. For this workshop, we will use version 4.3 of SnpEff/SnpSift which we can install using conda:
 
 ```
-data.dir = /path/to/snpeff/databases
+conda install -c bioconda snpeff=4.3 snpsift=4.3
 ```
 
-For example, we can specify the databases to be installed in a refs folder in your home directory:
+Now we need to download/build the genome database that we will annotate against. Specifically, we will use the GRCh37.75 genome. This can be done with the following command:
 
 ```
-data.dir = $(HOME)/refs/snpeff/4.3
+snpEff download GRCh37.75
 ```
 
-Now we need to build the genome database that we will annotate against. Specifically, we will use the GRCh37.75 genome.
-
-```
-java -Xmx4G -jar $(HOME)/usr/snpeff/4.3/snpEff.jar \
-  download \
-  -c $(HOME)/usr/snpeff/4.3/snpEff.config \
-  GRCh37.75
-```
+> For those more technically interested, the database ends up being downloaded into the conda environment.
 
 ## Calling Variants
 
@@ -377,7 +365,7 @@ Notice how for the `model` parameter, we used the `$(HOME)/museq/4.3.8/museq/mod
 
 To call variants using Strelka, we use the following command:
 
-```
+```{bash}
 $(HOME)/usr/strelka/1.0.15/bin/configureStrelkaWorkflow.pl \
   --tumor bams/HCC1395_exome_tumour.17.7MB-8MB.bam \
   --normal bams/HCC1395_exome_normal.17.7MB-8MB.bam \
@@ -388,7 +376,7 @@ $(HOME)/usr/strelka/1.0.15/bin/configureStrelkaWorkflow.pl \
 
 This will setup the Strelka run, now do the following:
 
-```
+```{bash}
 cd strelka/HCC1395_exome_tumour_normal_17
 make
 ```
@@ -406,9 +394,9 @@ We will annotate variants using [SnpEff](http://snpeff.sourceforge.net/). Other 
 
 Once we have the vcf files from MutationSeq and Strelka, we can use the following commands:
 
-```
+```{bash}
 # Annotating MutationSeq Vcf
-java -Xmx4G -jar $(HOME)/usr/snpeff/4.3/snpEff.jar \
+snpEff \
   -canon \
   GRCh37.75 \
   -s museq/results/HCC1395_exome_tumour_normal.snpeff.summary.html \
@@ -416,7 +404,7 @@ java -Xmx4G -jar $(HOME)/usr/snpeff/4.3/snpEff.jar \
   > museq/results/HCC1395_exome_tumour_normal.snpeff.vcf
 
 # Annotating Strelka Vcf
-java -Xmx4G -jar $(HOME)/usr/snpeff/4.3/snpEff.jar \
+snpEff \
   -canon \
   GRCh37.75 \
   -s strelka/HCC1395_exome_tumour_normal_17/results/passed.somatic.snvs.snpeff.summary.html \
@@ -431,7 +419,7 @@ One standard step that is often done is converting the VCF file into a tabular f
 The following command demonstrates how one can convert the MutationSeq VCF output file that has been annotated with SnpEff into a tabular format.
 
 ```{bash}
-java -jar /home/fong/usr/snpeff/4.3/SnpSift.jar \
+SnpSift \
   extractFields \
   -e "."  \
   -s "," \
@@ -441,13 +429,13 @@ java -jar /home/fong/usr/snpeff/4.3/SnpSift.jar \
   ANN[*].FEATUREID ANN[*].BIOTYPE ANN[*].RANK ANN[*].HGVS_C ANN[*].HGVS_P \
   ANN[*].CDNA_POS ANN[*].CDNA_LEN ANN[*].CDS_POS ANN[*].CDS_LEN ANN[*].AA_POS \
   ANN[*].AA_LEN ANN[*].DISTANCE ANN[*].ERRORS \
-  > museq/results/HCC1395_exome_tumour_normal_17.snpeff.tsv.tmp 
+  > museq/results/HCC1395_exome_tumour_normal_17.snpeff.tsv
 ```
 
 And this is the command for Strelka output.
 
 ```{bash}
-java -jar $(HOME)/usr/snpeff/4.3/SnpSift.jar \
+SnpSift \
   extractFields \
   -e "."  \
   -s "," \

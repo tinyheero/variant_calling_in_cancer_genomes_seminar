@@ -180,7 +180,9 @@ snpeff.vcf : \
 #----------
 snpeff.tsv : \
 	museq/results/HCC1395_exome_tumour_normal_17.snpeff.tsv \
-	strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.snpeff.tsv 
+	museq/results/HCC1395_exome_tumour_normal.snpeff.tsv \
+	strelka/HCC1395_exome_tumour_normal/results/passed.somatic.snvs.snpeff.tsv  \
+	strelka/HCC1395_exome_tumour_normal_17/results/passed.somatic.snvs.snpeff.tsv 
 
 VCF_COLS = CHROM \
 					 POS \
